@@ -13,6 +13,13 @@ from pythainlp.corpus import thai_words
 import os
 import json
 from datetime import datetime
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import io
 
 def setup_output_directories(base_dir):
     """Setup directory structure for analysis outputs"""
@@ -231,20 +238,122 @@ def main():
                 report.extend([f"{k}: {v}" for k, v in data.items() 
                              if k not in ['plot', 'plots']])
         
-        save_report('\n'.join(report), 'analysis_report.txt', dirs['reports'])
+        # Generate PDF report
+        print("\nGenerating PDF report...")
+        pdf_path = os.path.join(output_dir, 'dataset_quality_report.pdf')
+        generate_pdf_report(results, report, pdf_path)
         
         print("\nAnalysis complete!")
         print("=" * 50)
         print(f"Results saved in: {output_dir}")
-        print(f"- Plots: {dirs['plots']}")
-        print(f"- Report: {dirs['reports']}")
-        print(f"- Statistics: {dirs['stats']}")
+        print(f"- Full PDF Report: {pdf_path}")
+        print(f"- Individual files:")
+        print(f"  - Plots: {dirs['plots']}")
+        print(f"  - Report: {dirs['reports']}")
+        print(f"  - Statistics: {dirs['stats']}")
         
     except Exception as e:
         print(f"\nError during analysis:")
         import traceback
         print(traceback.format_exc())
         return
+
+def generate_pdf_report(results, text_report, output_path):
+    """Generate comprehensive PDF report"""
+    doc = SimpleDocTemplate(
+        output_path,
+        pagesize=A4,
+        rightMargin=72,
+        leftMargin=72,
+        topMargin=72,
+        bottomMargin=72
+    )
+    
+    # สร้าง story สำหรับใส่เนื้อหา
+    story = []
+    styles = getSampleStyleSheet()
+    
+    # เพิ่มหัวข้อ
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30
+    )
+    story.append(Paragraph("Data quality analysis report", title_style))
+    story.append(Spacer(1, 20))
+    
+    # ข้อมูลพื้นฐาน
+    basic_info = [
+        ["Data files:", results['dataset_info']['filename']],
+        ["number of samples:", str(results['dataset_info']['total_samples'])],
+        ["Date of analysis:", results['dataset_info']['timestamp']]
+    ]
+    
+    tbl = Table(basic_info, colWidths=[120, 300])
+    tbl.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('TOPPADDING', (0, 0), (-1, -1), 12)
+    ]))
+    story.append(tbl)
+    story.append(Spacer(1, 20))
+    
+    # เพิ่มกราฟต่างๆ
+    for analysis_name, analysis_data in results['analyses'].items():
+        # หัวข้อส่วน
+        story.append(Paragraph(analysis_name.replace('_', ' ').title(), styles['Heading2']))
+        story.append(Spacer(1, 12))
+        
+        # เพิ่มกราฟ
+        if 'plot' in analysis_data:
+            img = Image(analysis_data['plot'])
+            img.drawHeight = 300
+            img.drawWidth = 450
+            story.append(img)
+            story.append(Spacer(1, 12))
+        elif 'plots' in analysis_data:
+            for plot_path in analysis_data['plots'].values():
+                img = Image(plot_path)
+                img.drawHeight = 300
+                img.drawWidth = 450
+                story.append(img)
+                story.append(Spacer(1, 12))
+        
+        # เพิ่มข้อมูลสถิติ
+        if isinstance(analysis_data, dict):
+            stats_data = []
+            for key, value in analysis_data.items():
+                if key not in ['plot', 'plots']:
+                    if isinstance(value, dict):
+                        for subkey, subvalue in value.items():
+                            stats_data.append([f"{key} - {subkey}:", str(subvalue)])
+                    else:
+                        stats_data.append([key + ":", str(value)])
+            
+            if stats_data:
+                tbl = Table(stats_data, colWidths=[200, 220])
+                tbl.setStyle(TableStyle([
+                    ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+                    ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                    ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 10),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+                    ('TOPPADDING', (0, 0), (-1, -1), 12)
+                ]))
+                story.append(tbl)
+                story.append(Spacer(1, 12))
+    
+    # สร้าง PDF
+    doc.build(story)
+    print(f"PDF report saved to: {output_path}")
 
 if __name__ == "__main__":
     main()

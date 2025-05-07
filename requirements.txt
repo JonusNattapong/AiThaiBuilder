@@ -1,9 +1,11 @@
 gradio
 requests
 python-dotenv
-datasets
+datasets 
 huggingface_hub
 pandas
 torch
 transformers
 scikit-learn
+reportlab
+matplotlib

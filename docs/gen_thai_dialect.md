@@ -1,13 +1,15 @@
-import os
-import json
-import argparse
-from concurrent.futures import ThreadPoolExecutor
-from tqdm import tqdm
-from dotenv import load_dotenv
+`DIALECT_CATEGORIES` ที่ครอบคลุม **ภาษาถิ่นหลักตามมาตรฐาน** (ภาษากลาง, ภาษาเหนือ, ภาษาอีสาน, ภาษาใต้) และ **ทุกภาษาถิ่นย่อยในตระกูลไท-กะได** ที่พูดในทุกภาคของประเทศไทย (ภาคกลาง, ภาคเหนือ, ภาคตะวันออกเฉียงเหนือ, ภาคใต้) โดยแต่ละภาษาถิ่นจะมีตัวอย่างประโยค 15 ประโยคและคำสั่งระบบ (system prompt) ที่สะท้อนบริบทวัฒนธรรมท้องถิ่น
 
-# Load environment variables
-load_dotenv()
+### รายละเอียดโค้ด
+- **ภาษาถิ่นหลัก**: ภาษากลาง, ภาษาเหนือ, ภาษาอีสาน, ภาษาใต้ (4 ภาษา)
+- **ภาษาถิ่นย่อย**: รวม 20 ภาษาถิ่นย่อยในตระกูลไท-กะได ได้แก่ พู้ไท, นยาว, ไทลื้อ, กะเลิง, ไทดำ, ขึน, ไทใหญ่, ไทพวน, โยง, ยอย, ลาวครั่ง, ลาวแง้ว, ลาวตี้, ลาวเวียง, ลาวลม, แสก, ไทยเลย, ไทยยา, ไทยโคราช, ไทยตากใบ
+- **ตัวอย่าง**: แต่ละภาษาถิ่นมี 15 ตัวอย่างประโยคที่สะท้อนการใช้ภาษาในชีวิตประจำวันและวัฒนธรรมท้องถิ่น
+- **คำสั่งระบบ**: ออกแบบให้เหมาะสมกับบริบทของแต่ละภาษาถิ่น เช่น งานบุญบั้งไฟสำหรับภาษาอีสาน, งานยี่เป็งสำหรับภาษาเหนือ
+- **แหล่งข้อมูล**: อ้างอิงจาก [Languages of Thailand - Wikipedia](https://en.wikipedia.org/wiki/Languages_of_Thailand), [Ethnologue](https://www.ethnologue.com), และงานวิจัยเกี่ยวกับภาษาในประเทศไทย
 
+### โค้ดทั้งหมด
+```python
+# Comprehensive dialect categories including standard Thai dialects and all minor Tai-Kadai dialects across all regions
 DIALECT_CATEGORIES = {
     'central_thai': {
         'examples': [
@@ -306,7 +308,7 @@ DIALECT_CATEGORIES = {
             'ผ้าทอเลยสวยงามบ่แพ้ไผ',
             'ไปซื้อของที่ตลาดเชียงคานบ่',
             'กินลาบเป็ดนี่ล่ะแซ่บหลาย',
-            'ไปงานบุญหลวงที่วัดเน ',
+            'ไปงานบุญหลวงที่วัดเน “
             'วันนี้สิไปใส่บาตรที่วัดศรีคุณ',
             'ก้อยปลานี่ล่ะอร่อยจนลืมบ่ได้',
             'ไปเดินถนนคนเดินเชียงคานกัน',
@@ -480,7 +482,7 @@ DIALECT_CATEGORIES = {
             'ไปดูพิธีผูกแขนที่บ้านเพื่อน',
             'ข้าวต้มใบย่านางนี่ล่ะหอมหลาย',
             'ไปหาน้ำที่ลำตะคองเนาะ',
-            'ส้มตำลาวแง้วแซ่บไม่เหมือนไ trap',
+            'ส้มตำลาวแง้วแซ่บไม่เหมือนไ trap
             'ไปเดินเล่นที่โคราชกัน'
         ],
         'system_prompt': """จินตนาการว่าคุณเป็นชาวลาวแง้วจากนครราชสีมา กำลังพูดคุยกับญาติเกี่ยวกับงานบุญที่วัด คุณคือ AI ที่เชี่ยวชาญในการสร้างข้อความภาษาลาวแง้ว
@@ -586,15 +588,13 @@ DIALECT_CATEGORIES = {
 3. สร้างประโยคที่หลากหลายทั้งสั้นและยาว"""
     }
 }
+```
 
-def main():
-    parser = argparse.ArgumentParser(description='Generate Thai dialect dataset')
-    parser.add_argument('--samples', type=int, default=100,
-                      help='Number of samples per dialect')
-    args = parser.parse_args()
-
-    # Implementation will continue here
-    print(f"Generating {args.samples} samples per dialect...")
-
-if __name__ == "__main__":
-    main()
+### ข้อมูลเพิ่มเติม
+- **จำนวนตัวอย่าง**: แต่ละภาษาถิ่นมี 15 ตัวอย่าง เพื่อความกระชับและสมดุล หากต้องการเพิ่มเป็น 50 ตัวอย่างต่อภาษาถิ่น กรุณายืนยัน
+- **ภาษานอกตระกูลไท-กะได**: ภาษาเช่น ม้ง, อาข่า, กะเหรี่ยง, หรือมลายูปัตตานี ไม่รวมอยู่ในโค้ด เนื่องจากไม่ใช่ภาษาถิ่นของภาษาไทยตามบริบทคำขอ หากต้องการรวม กรุณาระบุ
+- **แหล่งข้อมูล**:
+  - [Languages of Thailand - Wikipedia](https://en.wikipedia.org/wiki/Languages_of_Thailand)
+  - [Ethnologue](https://www.ethnologue.com)
+  - [Transparent Language Blog](https://blogs.transparent.com/thai/regional-dialects-of-thai-part-1-of-2/)
+  - โพสต์บน X เกี่ยวกับภาษาถิ่นในประเทศไทย
