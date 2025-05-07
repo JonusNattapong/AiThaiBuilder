@@ -1,0 +1,131 @@
+openapi: 3.0.0
+info:
+  title: Thai Dataset Generator API
+  version: "1.0.0"
+  description: |
+    Conceptual API documentation for the Thai Dataset Generator.
+    This describes the inputs and outputs for the dataset generation process
+    facilitated by the Gradio application.
+
+servers:
+  - url: http://127.0.0.1:7860 # Placeholder, as it's a Gradio app
+    description: Local Gradio application
+
+components:
+  schemas:
+    DatasetGenerationRequest:
+      type: object
+      required:
+        - selected_task
+        - num_samples
+      properties:
+        api_key:
+          type: string
+          description: Your Deepseek API key. Can be pre-configured via .env or UI.
+          example: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        system_prompt_custom:
+          type: string
+          description: Optional custom system prompt to override task defaults.
+          example: "คุณเป็นผู้เชี่ยวชาญด้านการสร้างบทกวีไทย"
+        selected_task:
+          type: string
+          description: The NLP task for which to generate data.
+          enum:
+            - "Text Generation"
+            - "Summarization (TH)"
+            - "Translation (EN to TH)"
+            - "Question Answering (TH)"
+            - "Text Classification"
+            - "Token Classification"
+            - "Table Question Answering"
+            - "Zero-Shot Classification"
+            - "Feature Extraction"
+            - "Text2Text Generation"
+            - "Fill-Mask"
+            - "Sentence Similarity"
+            - "Table to Text"
+            - "Multiple Choice"
+            - "Text Ranking"
+            - "Text Retrieval"
+          example: "Text Generation"
+        num_samples:
+          type: integer
+          format: int32
+          description: The number of data samples to generate.
+          example: 5
+        additional_instructions:
+          type: string
+          description: Specific instructions to guide the generation for the current sample.
+          example: "เขียนในรูปแบบที่ไม่เป็นทางการ"
+        task_specific_inputs:
+          type: object
+          description: Inputs specific to the selected task. Structure varies.
+          properties:
+            main_input:
+              type: string
+              description: Primary input for the task (e.g., topic, text to summarize/translate, question).
+              example: "หัวข้อ: ประโยชน์ของแมว"
+            context_input:
+              type: string
+              description: Contextual input, if required by the task (e.g., for Question Answering).
+              example: "แมวเป็นสัตว์เลี้ยงลูกด้วยนม..."
+          example:
+            main_input: "ประโยชน์ของการอ่านหนังสือ"
+            context_input: null # or actual context for QA
+
+    DatasetGenerationResponse:
+      type: object
+      properties:
+        status_message:
+          type: string
+          description: A message indicating the status of the generation and raw output previews.
+          example: "สร้างข้อมูลเสร็จสิ้น 3 ตัวอย่างสำหรับ Task: Text Generation..."
+        output_filename:
+          type: string
+          description: The name of the generated dataset file.
+          example: "dataset_Text_Generation_20231027_103000.txt"
+        file_info:
+          type: string
+          description: Information about the generated file.
+          example: "ไฟล์ที่สร้าง: dataset_Text_Generation_20231027_103000.txt"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Description of the error.
+          example: "ข้อผิดพลาด: ไม่ได้ระบุ Deepseek API Key หรือ API Key ไม่ถูกต้อง"
+
+paths:
+  /generate-dataset: # Conceptual endpoint
+    post:
+      summary: Generate Thai Dataset
+      description: |
+        Triggers the dataset generation process based on the provided parameters.
+        This is a conceptual representation of the Gradio app's core functionality.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetGenerationRequest'
+      responses:
+        '200':
+          description: Dataset generation process initiated or completed. The actual file is made available for download through the Gradio interface.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetGenerationResponse'
+        '400':
+          description: Bad request (e.g., missing required parameters, invalid API key).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error during generation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

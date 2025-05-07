@@ -1,0 +1,23 @@
+streamlit
+torch
+transformers
+pandas
+numpy
+tqdm
+python-dotenv
+openai
+tiktoken
+nltk
+spacy
+langdetect
+textblob
+keybert
+sentence-transformers
+scikit-learn
+matplotlib
+plotly
+wordcloud
+validators
+faker
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0.tar.gz
+th_core_news_lg @ https://github.com/explosion/spacy-models/releases/download/th_core_news_lg-3.5.0/th_core_news_lg-3.5.0.tar.gz

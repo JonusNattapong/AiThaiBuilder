@@ -1,0 +1,50 @@
+# Environment variables
+.env
+*.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+*.pyc
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# IDE and editor specific files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Gradio specific (if any temporary files are created, though usually not needed)
+# .gradio_cache/ (Uncomment if Gradio creates such a directory you want to ignore)
+
+# Output datasets (optional, if you don't want to commit generated datasets)
+# dataset_*.txt
+# dataset_*.jsonl
+
+# Temporary files created by the application for download
+# This will ignore files like "dataset_Text_Generation_20231027_103000.txt"
+# that are created in the root directory.
+dataset_*.txt
+dataset_*.jsonl

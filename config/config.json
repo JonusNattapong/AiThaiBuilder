@@ -1,0 +1,104 @@
+{
+  "ALL_TASKS": [
+    "Text Generation", "Summarization (TH)", "Translation (EN to TH)", "Translation (ZH to TH)", "Question Answering (TH)",
+    "Text Classification", "Token Classification", "Table Question Answering",
+    "Zero-Shot Classification", "Feature Extraction", "Text2Text Generation",
+    "Fill-Mask", "Sentence Similarity", "Table to Text", "Multiple Choice",
+    "Text Ranking", "Text Retrieval"
+  ],
+  "DEFAULT_SYSTEM_PROMPT": "คุณเป็นผู้ช่วย AI อเนกประสงค์ที่สามารถสร้างข้อมูลภาษาไทยคุณภาพสูงสำหรับงาน NLP ต่างๆ",
+  "TASK_CONFIG": {
+    "Text Generation": {
+        "description": "สร้างข้อความภาษาไทยตามหัวข้อหรือคำสั่งที่กำหนด",
+        "system_prompt_default": "คุณเป็นผู้ช่วย AI สร้างสรรค์ที่เชี่ยวชาญในการเขียนเนื้อหาภาษาไทยที่หลากหลายและมีคุณภาพสูง",
+        "user_prompt_template": "สร้างข้อความภาษาไทยเกี่ยวกับหัวข้อต่อไปนี้: {main_input}\n\n{additional_instructions}",
+        "inputs": {
+            "main_input": {"label": "ป้อนหัวข้อหรือคำสั่งเริ่มต้น (ภาษาไทย):", "lines": 3}
+        },
+        "output_format": "text"
+    },
+    "Summarization (TH)": {
+        "description": "สรุปเนื้อหาสำคัญของข้อความภาษาไทยที่กำหนดให้",
+        "system_prompt_default": "คุณเป็นผู้ช่วย AI ที่เชี่ยวชาญในการสรุปข้อความภาษาไทยให้กระชับ ได้ใจความ และถูกต้อง",
+        "user_prompt_template": "กรุณาสรุปข้อความภาษาไทยต่อไปนี้:\n\n---\n{main_input}\n---\n\nสรุป:\n{additional_instructions}",
+        "inputs": {
+            "main_input": {"label": "ป้อนข้อความภาษาไทยสำหรับสรุป:", "lines": 7}
+        },
+        "output_format": "text"
+    },
+    "Translation (EN to TH)": {
+        "description": "แปลข้อความจากภาษาอังกฤษเป็นภาษาไทย",
+        "system_prompt_default": "คุณเป็นผู้เชี่ยวชาญการแปลภาษาอังกฤษเป็นไทยที่มีความสามารถสูง แปลให้เป็นธรรมชาติและถูกต้องตามบริบท",
+        "user_prompt_template": "แปลข้อความภาษาอังกฤษต่อไปนี้เป็นภาษาไทย:\n\nEnglish Text:\n\"\"\"\n{main_input}\n\"\"\"\n\nThai Translation:\n{additional_instructions}",
+        "inputs": {
+            "main_input": {"label": "ป้อนข้อความภาษาอังกฤษ:", "lines": 7}
+        },
+        "output_format": "text",
+        "translation_function": "generate_en_to_th_translation"
+    },
+    "Translation (ZH to TH)": {
+        "description": "แปลข้อความจากภาษาจีนเป็นภาษาไทย",
+        "system_prompt_default": "คุณเป็นผู้เชี่ยวชาญการแปลภาษาจีนเป็นไทยที่มีความสามารถสูง แปลให้เป็นธรรมชาติและถูกต้องตามบริบท",
+        "user_prompt_template": "แปลข้อความภาษาจีนต่อไปนี้เป็นภาษาไทย:\n\nChinese Text:\n\"\"\"\n{main_input}\n\"\"\"\n\nThai Translation:\n{additional_instructions}",
+        "inputs": {
+            "main_input": {"label": "ป้อนข้อความภาษาจีน:", "lines": 7}
+        },
+        "output_format": "text",
+        "translation_function": "generate_zh_to_th_translation"
+    },
+    "Question Answering (TH)": {
+        "description": "ตอบคำถามภาษาไทยโดยอ้างอิงจากบริบทที่ให้มา",
+        "system_prompt_default": "คุณเป็นผู้ช่วย AI ที่สามารถตอบคำถามจากบริบทที่กำหนดให้ได้อย่างแม่นยำเป็นภาษาไทย",
+        "user_prompt_template": "จากบริบทต่อไปนี้:\n\"\"\"\n{context_input}\n\"\"\"\n\nคำถาม:\n\"\"\"\n{main_input}\n\"\"\"\n\nคำตอบ (ภาษาไทย):\n{additional_instructions}",
+        "inputs": {
+            "context_input": {"label": "ป้อนบริบท (ภาษาไทย):", "lines": 7},
+            "main_input": {"label": "ป้อนคำถาม (ภาษาไทย):", "lines": 2}
+        },
+        "output_format": "jsonl",
+        "jsonl_fields": ["context_input", "main_input", "generated_answer"]
+    },
+    "Text Classification": {
+        "description": "จำแนกประเภทของข้อความภาษาไทยตามชุดของป้ายกำกับ (labels) ที่กำหนด",
+        "system_prompt_default": "คุณเป็นผู้ช่วย AI ที่เชี่ยวชาญในการจำแนกประเภทข้อความภาษาไทย โปรดเลือกป้ายกำกับที่เหมาะสมที่สุดสำหรับข้อความที่กำหนดจากรายการป้ายกำกับที่มีให้",
+        "user_prompt_template": "ข้อความภาษาไทย:\n\"\"\"\n{main_input}\n\"\"\"\n\nป้ายกำกับที่เป็นไปได้ (คั่นด้วยจุลภาค):\n{labels_input}\n\nคำสั่ง: โปรดเลือกป้ายกำกับที่เหมาะสมที่สุดสำหรับข้อความข้างต้นจากรายการป้ายกำกับที่ให้มาเท่านั้น และตอบเฉพาะป้ายกำกับที่เลือก\n{additional_instructions}\n\nป้ายกำกับที่เลือก:",
+        "inputs": {
+            "main_input": {"label": "ป้อนข้อความภาษาไทยสำหรับจำแนก:", "lines": 5},
+            "labels_input": {"label": "ป้อนป้ายกำกับที่เป็นไปได้ (คั่นด้วยจุลภาค, เช่น กีฬา,การเมือง,บันเทิง):", "lines": 1}
+        },
+        "output_format": "jsonl",
+        "jsonl_fields": ["main_input", "labels_input", "generated_answer"]
+    },
+    "Zero-Shot Classification": {
+        "description": "จำแนกประเภทของข้อความภาษาไทยโดยไม่ต้องมีตัวอย่างการฝึกสอนเฉพาะสำหรับป้ายกำกับเหล่านั้น (ใช้ความเข้าใจภาษาทั่วไป)",
+        "system_prompt_default": "คุณเป็นผู้ช่วย AI ที่มีความสามารถในการจำแนกประเภทข้อความตามหัวข้อหรือหมวดหมู่ที่กำหนดให้ แม้ว่าจะไม่เคยเห็นตัวอย่างเฉพาะสำหรับหมวดหมู่นั้นมาก่อนก็ตาม",
+        "user_prompt_template": "ข้อความต่อไปนี้จัดอยู่ในหมวดหมู่ใดจากรายการที่กำหนด:\n\nข้อความ:\n\"\"\"\n{main_input}\n\"\"\"\n\nหมวดหมู่ที่เป็นไปได้ (คั่นด้วยจุลภาค):\n{labels_input}\n\nคำสั่ง: โปรดเลือกหมวดหมู่ที่เหมาะสมที่สุดสำหรับข้อความข้างต้นจากรายการหมวดหมู่ที่ให้มาเท่านั้น และตอบเฉพาะหมวดหมู่ที่เลือก\n{additional_instructions}\n\nหมวดหมู่ที่เลือก:",
+        "inputs": {
+            "main_input": {"label": "ป้อนข้อความภาษาไทย:", "lines": 5},
+            "labels_input": {"label": "ป้อนหมวดหมู่ที่เป็นไปได้ (คั่นด้วยจุลภาค):", "lines": 1}
+        },
+        "output_format": "jsonl",
+        "jsonl_fields": ["main_input", "labels_input", "generated_answer"]
+    },
+    "Fill-Mask": {
+        "description": "เติมคำหรือวลีที่หายไปในช่องว่าง (ระบุด้วย [MASK]) ในข้อความภาษาไทย",
+        "system_prompt_default": "คุณเป็นผู้ช่วย AI ที่เชี่ยวชาญในการทำความเข้าใจบริบทและเติมคำหรือวลีที่เหมาะสมในช่องว่างของประโยคภาษาไทย",
+        "user_prompt_template": "จากประโยคภาษาไทยต่อไปนี้ โปรดเติมคำหรือวลีที่เหมาะสมที่สุดในตำแหน่ง [MASK]:\n\nประโยค:\n\"\"\"\n{main_input}\n\"\"\"\n\n{additional_instructions}\n\nคำ/วลีที่เติมใน [MASK]:",
+        "inputs": {
+            "main_input": {"label": "ป้อนข้อความภาษาไทยพร้อมด้วย [MASK] หนึ่งตำแหน่ง (เช่น 'แมวของฉันชอบกิน [MASK] มาก'):", "lines": 3}
+        },
+        "output_format": "jsonl",
+        "jsonl_fields": ["main_input", "generated_answer"]
+    },
+    "Sentence Similarity": {
+        "description": "ประเมินความคล้ายคลึงกันระหว่างประโยคภาษาไทยสองประโยค",
+        "system_prompt_default": "คุณเป็นผู้ช่วย AI ที่สามารถวิเคราะห์และประเมินความคล้ายคลึงทางความหมายระหว่างประโยคสองประโยคเป็นภาษาไทย โปรดให้คะแนนความคล้ายคลึงกันระหว่าง 0 (ไม่คล้ายกันเลย) ถึง 1 (เหมือนกันมาก) หรือบรรยายระดับความคล้ายคลึง",
+        "user_prompt_template": "ประเมินความคล้ายคลึงกันระหว่างสองประโยคต่อไปนี้:\n\nประโยคที่ 1:\n\"\"\"\n{main_input}\n\"\"\"\n\nประโยคที่ 2:\n\"\"\"\n{context_input}\n\"\"\"\n\n{additional_instructions}\n\nการประเมินความคล้ายคลึง (เช่น 'คล้ายกันมาก', '0.8', 'มีความหมายเกี่ยวข้องกันเล็กน้อย'):",
+        "inputs": {
+            "main_input": {"label": "ป้อนประโยคภาษาไทยที่ 1:", "lines": 3},
+            "context_input": {"label": "ป้อนประโยคภาษาไทยที่ 2:", "lines": 3}
+        },
+        "output_format": "jsonl",
+        "jsonl_fields": ["main_input", "context_input", "generated_answer"]
+    }
+  }
+}
