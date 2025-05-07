@@ -2,9 +2,14 @@ import csv
 import uuid
 
 
+# Assuming new_categories is defined earlier, e.g., new_categories = {}
+new_categories = {}
+
 # สร้างข้อความใหม่สำหรับหมวด travel, food, technology, entertainment
 new_categories.update({
     "travel": [
+        "อยากไปเที่ยวญี่ปุ่นช่วงซากุระบาน",
+        "แนะนำที่พักสวยๆ ที่เชียงใหม่หน่อย",
         "อยากไปเที่ยวเชียงใหม่หน้าหนาวนี้",
         "ใครเคยขับรถเที่ยวเส้นทางเลียบชายฝั่งบ้าง",
         "ทะเลระยองช่วงนี้เงียบสงบมาก",

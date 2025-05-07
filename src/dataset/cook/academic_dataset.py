@@ -1,6 +1,7 @@
 import csv
 import uuid
 
+# Assuming new_categories is defined earlier, e.g., new_categories = {}
 new_categories.update({
     "academic": [
         "การศึกษาเชิงคุณภาพมุ่งเน้นที่การวิเคราะห์เชิงลึก",

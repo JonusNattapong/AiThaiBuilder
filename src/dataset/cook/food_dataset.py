@@ -1,6 +1,7 @@
 import csv
 import uuid
 
+# Assuming new_categories is defined earlier, e.g., new_categories = {}
 new_categories.update({
     "food": [
         "วันนี้กินข้าวมันไก่เจ้าโปรดอีกแล้ว",

@@ -3,6 +3,16 @@ import uuid
 
 # สร้างข้อความสำหรับหมวดหมู่ productivity_tool
 categories = {
+    "productivity_tool_software": [
+        "แนะนำโปรแกรมจัดการงาน (Task Management) เช่น Trello, Asana",
+        "วิธีใช้ Google Calendar วางแผนตารางงานอย่างมีประสิทธิภาพ",
+        # ...
+    ],
+    "productivity_tool_hardware": [
+        "การเลือกใช้คีย์บอร์ด Ergonomic เพื่อลดอาการปวดข้อมือ",
+        "ประโยชน์ของจอคอมพิวเตอร์แบบ Ultrawide สำหรับการทำงาน",
+        # ...
+    ],
     "productivity_tool": [
         "วิธีใช้ Notion จัดระเบียบชีวิตและการทำงาน",
         "รวมแอปพลิเคชันช่วยจัดการเวลาและ To-Do List",

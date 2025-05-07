@@ -1,6 +1,8 @@
 import csv
 import uuid
 
+# Assuming new_categories is defined earlier, e.g., new_categories = {}
+new_categories = {}
 
 # สร้างข้อความใหม่สำหรับหมวด technology และ entertainment
 new_categories.update({

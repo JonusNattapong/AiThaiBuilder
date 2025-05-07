@@ -1,6 +1,11 @@
 import csv
 import uuid
 
+# new_categories should be defined or imported before this
+# Assuming new_categories = {} or similar is present if this is the first mention
+# For example:
+new_categories = {} # Add this line if new_categories is not defined before .update()
+
 new_categories.update({
     "conversation": [
         "เมื่อวานนี้มีประชุมเหนื่อยมากเลย",

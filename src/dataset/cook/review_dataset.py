@@ -1,6 +1,25 @@
 import csv
 import uuid
 
+# Assuming new_categories is defined earlier, e.g., new_categories = {}
+new_categories.update({
+    "review_positive": [
+        "ร้านนี้อาหารอร่อยมาก บริการดีเยี่ยม",
+        "สินค้าคุณภาพดี จัดส่งรวดเร็ว",
+        #...
+    ],
+    "review_negative": [
+        "รสชาติอาหารแย่มาก ไม่คุ้มราคาเลย",
+        "สั่งของไปแล้วได้ไม่ตรงปก ผิดหวังสุดๆ",
+        #...
+    ],
+    "review_neutral": [ # Example, if neutral reviews were intended
+        "โรงแรมนี้พอใช้ได้ ไม่ได้ดีแต่ก็ไม่แย่",
+        "คอร์สเรียนภาษาเข้าใจง่าย เนื้อหาดี",
+        "รองพื้นติดทน ไม่เป็นคราบ"
+    ]
+})
+
 new_categories.update({
 "review": [
         "กล้องถ่ายรูปตัวนี้คุณภาพเยี่ยมเกินราคา",

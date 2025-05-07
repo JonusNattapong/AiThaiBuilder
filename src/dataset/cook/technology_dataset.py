@@ -1,10 +1,14 @@
 import csv
 import uuid
 
+# Assuming new_categories is defined earlier, e.g., new_categories = {}
+new_categories = {}
 
 # สร้างข้อความใหม่สำหรับหมวด technology และ entertainment
 new_categories.update({
     "technology": [
+        "โทรศัพท์มือถือรุ่นใหม่ล่าสุดมีฟีเจอร์อะไรบ้าง",
+        "เทคโนโลยี 5G จะเปลี่ยนโลกอย่างไร",
         "เทคโนโลยี 5G ทำให้การสื่อสารรวดเร็วขึ้น",
         "AI เริ่มมีบทบาทในชีวิตประจำวันมากขึ้น",
         "มือถือรุ่นใหม่มีฟีเจอร์กล้องที่ล้ำสมัย",

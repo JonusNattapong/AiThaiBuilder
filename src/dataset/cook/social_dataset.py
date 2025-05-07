@@ -1,9 +1,13 @@
 import csv
 import uuid
 
+# Assuming new_categories is defined earlier, e.g., new_categories = {}
+new_categories = {}
 
 new_categories.update({
     "social": [
+        "ดราม่าล่าสุดในทวิตเตอร์คืออะไร",
+        "เทรนด์ใหม่ใน TikTok ที่กำลังมาแรง",
         "ใครเคยโดนแก๊งคอลเซ็นเตอร์โทรมาบ้าง",
         "แนะนำวิธีประหยัดเงินในยุคเศรษฐกิจแบบนี้หน่อย",
         "เพื่อนในเฟซโพสต์ข่าวปลอมอีกแล้ว",
