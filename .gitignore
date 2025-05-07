@@ -48,3 +48,6 @@ Thumbs.db
 # that are created in the root directory.
 dataset_*.txt
 dataset_*.jsonl
+
+test/
+output/

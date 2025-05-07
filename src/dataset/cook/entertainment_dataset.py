@@ -1,11 +1,4 @@
-import csv
-import uuid
-
-# Assuming new_categories is defined earlier, e.g., new_categories = {}
-new_categories = {}
-
-# สร้างข้อความใหม่สำหรับหมวด technology และ entertainment
-new_categories.update({
+categories = {
 "entertainment": [
         "หนังเรื่องใหม่เข้าโรงแล้วน่าดูมาก",
         "ใครดูซีรีส์เกาหลีเรื่องนี้แล้วบ้าง",
@@ -57,17 +50,5 @@ new_categories.update({
         "ใครเคยลองดูละครเวทีของนักศึกษาบ้าง",
         "งานแสดงศิลปะร่วมสมัยช่วยสร้างแรงบันดาลใจ"
     ]
-})
-
-# เตรียมข้อมูลเพิ่ม
-rows = []
-for label, texts in new_categories.items():
-    for text in texts:
-        rows.append([str(uuid.uuid4()), text, label])
-
-# บันทึกลง CSV
-with open('DataOutput/thai_entertainment_dataset.csv', 'w', newline='', encoding='utf-8') as f:
-    writer = csv.writer(f)
-    writer.writerow(['id', 'text', 'label'])
-    writer.writerows(rows)
+}
 

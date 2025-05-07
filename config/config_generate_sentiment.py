@@ -1,7 +1,7 @@
 import os
 
 # Output directory
-OUTPUT_DIR = os.path.join('DataOutput')
+OUTPUT_DIR = os.path.join('output')
 
 # Dataset configuration
 SENTIMENT_TASKS = {
@@ -22,7 +22,7 @@ SENTIMENT_TASKS = {
     }
 }
 
-NUM_SAMPLES_PER_TASK = 500  # Samples per emotion category
+NUM_SAMPLES_PER_TASK = 50  # Samples per emotion category for testing
 
 # Topics for general contexts
 TOPICS = [

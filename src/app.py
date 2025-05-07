@@ -136,7 +136,9 @@ def generate_dataset(
     file_content = "\n".join(results)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     output_filename_ext = 'jsonl' if task_info and task_info.get('output_format') == 'jsonl' else 'txt'
-    output_filename = os.path.join('data', f"dataset_{selected_task.replace(' ', '_').replace('(', '').replace(')', '')}_{timestamp}.{output_filename_ext}")
+    data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
+    os.makedirs(data_dir, exist_ok=True)
+    output_filename = os.path.join(data_dir, f"dataset_{selected_task.replace(' ', '_').replace('(', '').replace(')', '')}_{timestamp}.{output_filename_ext}")
     
     # Save to a temporary file for download
     try:

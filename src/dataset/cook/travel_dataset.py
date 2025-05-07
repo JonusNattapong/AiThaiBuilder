@@ -1,7 +1,3 @@
-import csv
-import uuid
-
-
 # Assuming new_categories is defined earlier, e.g., new_categories = {}
 new_categories = {}
 
@@ -61,15 +57,3 @@ new_categories.update({
         "เที่ยวตามรอยซีรีส์ก็สนุกดีเหมือนกัน"
     ]
 })
-
-# เตรียมข้อมูลเพิ่ม
-rows = []
-for label, texts in new_categories.items():
-    for text in texts:
-        rows.append([str(uuid.uuid4()), text, label])
-
-# บันทึกลง CSV
-with open('DataOutput/thai_travel_dataset.csv', 'w', newline='', encoding='utf-8') as f:
-    writer = csv.writer(f)
-    writer.writerow(['id', 'text', 'label'])
-    writer.writerows(rows)

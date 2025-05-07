@@ -4,8 +4,6 @@ import json
 import argparse
 import random
 from tqdm import tqdm
-import csv
-import uuid
 
 # Add project root to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -154,36 +152,5 @@ def main():
     if not api_key:
         print("Error: DeepSeek API Key not found.")
 
-# สร้างข้อความสำหรับหมวดหมู่ reflection_self_consistency
-categories = {
-    "reflection_self_consistency": [
-        "คำถาม: เมืองหลวงของออสเตรเลียคืออะไร? ตอบเบื้องต้น: ซิดนีย์ --- ทบทวนคำตอบ: ซิดนีย์เป็นเมืองใหญ่ แต่เมืองหลวงจริงๆ คืออะไร ลองตรวจสอบอีกครั้ง",
-        "แก้โจทย์คณิตศาสตร์: (15 + 5) * 2 - 10 = ? ลองคิดหลายๆ วิธีเพื่อให้ได้คำตอบที่ถูกต้องและตรวจสอบความสอดคล้องกัน",
-        "เขียนสรุปบทความเกี่ยวกับภาวะโลกร้อนความยาว 1 ย่อหน้า จากนั้นลองอ่านทบทวนและปรับปรุงให้กระชับและครอบคลุมยิ่งขึ้น",
-        "วางแผนการเดินทาง 3 วัน 2 คืนที่ภูเก็ตด้วยงบ 5,000 บาท ลองร่างแผนคร่าวๆ แล้วพิจารณาความเป็นไปได้และปรับแก้",
-        "ให้เหตุผลว่าทำไมการออกกำลังกายจึงสำคัญต่อสุขภาพ (ลองให้เหตุผลหลายๆ ข้อ แล้วเลือกข้อที่ดีที่สุด)",
-        "แปลประโยคนี้เป็นภาษาอังกฤษ: 'แมวกินปลา' ลองแปลหลายๆ แบบแล้วเลือกแบบที่เป็นธรรมชาติที่สุด",
-        "ปัญหา: ลูกค้าไม่พอใจกับสินค้าที่ซื้อไป ควรตอบอีเมลลูกค้าอย่างไร? ลองร่างคำตอบหลายๆ แบบแล้วเลือกแบบที่เหมาะสมที่สุด",
-        "วิเคราะห์ข้อดีข้อเสียของการทำงานจากที่บ้าน (Work From Home) ลองลิสต์ออกมาหลายๆ ด้านแล้วสรุป",
-        "ถ้ามีคนถามว่า 'อะไรคือสิ่งที่สำคัญที่สุดในชีวิต?' คุณจะตอบว่าอย่างไร ลองคิดคำตอบหลายๆ แง่มุม",
-        "เขียนเรื่องสั้นในหัวข้อ 'การผจญภัยในป่าใหญ่' จากนั้นลองอ่านและแก้ไขสำนวนภาษาให้สละสลวยขึ้น"
-    ]
-}
-
 if __name__ == "__main__":
-    output_dir = os.path.join("..", "..", "DataOutput")
-    os.makedirs(output_dir, exist_ok=True)
-    
-    output_file = os.path.join(output_dir, "thai_dataset_reflection_self_consistency.csv")
-
-    rows = []
-    for label, texts in categories.items():
-        for text in texts:
-            rows.append([str(uuid.uuid4()), text, label])
-
-    with open(output_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(['id', 'text', 'label'])
-        writer.writerows(rows)
-
-    print(f"Created {output_file}")
+    pass

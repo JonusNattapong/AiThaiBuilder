@@ -1,8 +1,4 @@
-import csv
-import uuid
-
-# Assuming new_categories is defined earlier, e.g., new_categories = {}
-new_categories.update({
+categories = {
     "academic": [
         "การศึกษาเชิงคุณภาพมุ่งเน้นที่การวิเคราะห์เชิงลึก",
         "แนวทางการเรียนรู้แบบร่วมมือมีประสิทธิภาพสูง",
@@ -54,18 +50,4 @@ new_categories.update({
         "การเขียนรายงานวิจัยควรมีโครงสร้างชัดเจน",
         "การสะท้อนตนเองช่วยในการพัฒนาทักษะเรียนรู้"
     ]
-})
-
-# เตรียมข้อมูลเพิ่ม
-rows = []
-for label, texts in new_categories.items():
-    for text in texts:
-        rows.append([str(uuid.uuid4()), text, label])
-
-# บันทึกลง CSV
-with open('DataOutput/thai_dataset_academic.csv', 'w', newline='', encoding='utf-8') as f:
-    writer = csv.writer(f)
-    writer.writerow(['id', 'text', 'label'])
-    writer.writerows(rows)
-
-    print("Created thai_dataset_academic.csv")
+}

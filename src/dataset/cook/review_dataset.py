@@ -1,8 +1,4 @@
-import csv
-import uuid
-
-# Assuming new_categories is defined earlier, e.g., new_categories = {}
-new_categories.update({
+categories = {
     "review_positive": [
         "ร้านนี้อาหารอร่อยมาก บริการดีเยี่ยม",
         "สินค้าคุณภาพดี จัดส่งรวดเร็ว",
@@ -18,9 +14,9 @@ new_categories.update({
         "คอร์สเรียนภาษาเข้าใจง่าย เนื้อหาดี",
         "รองพื้นติดทน ไม่เป็นคราบ"
     ]
-})
+}
 
-new_categories.update({
+categories = {
 "review": [
         "กล้องถ่ายรูปตัวนี้คุณภาพเยี่ยมเกินราคา",
         "เครื่องดูดฝุ่นใช้งานง่าย เสียงไม่ดัง",
@@ -72,15 +68,4 @@ new_categories.update({
         "คอร์สเรียนภาษาเข้าใจง่าย เนื้อหาดี",
         "รองพื้นติดทน ไม่เป็นคราบ"
     ]
-})
-
-rows = []
-for label, texts in new_categories.items():
-    for text in texts:
-        rows.append([str(uuid.uuid4()), text, label])
-
-# บันทึกลง CSV
-with open('DataOutput/thai_dataset_extended_part1.csv', 'w', newline='', encoding='utf-8') as f:
-    writer = csv.writer(f)
-    writer.writerow(['id', 'text', 'label'])
-    writer.writerows(rows)
+}

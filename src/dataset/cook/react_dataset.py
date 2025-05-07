@@ -5,8 +5,6 @@ import argparse
 import random
 from tqdm import tqdm
 import re
-import csv
-import uuid
 
 # Add project root to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -159,38 +157,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# สร้างข้อความสำหรับหมวดหมู่ react (Reason+Act)
-categories = {
-    "react": [
-        "ค้นหาสภาพอากาศปัจจุบันในกรุงเทพมหานคร และสรุปสั้นๆ",
-        "แปลประโยค 'Hello, world!' เป็นภาษาฝรั่งเศส โดยใช้เครื่องมือแปลภาษา",
-        "ตรวจสอบว่าวันนี้มีข่าวเกี่ยวกับเศรษฐกิจไทยที่สำคัญอะไรบ้างจากแหล่งข่าวออนไลน์",
-        "คำนวณ 25 * (18 + 7) โดยใช้เครื่องคิดเลข แล้วบอกผลลัพธ์",
-        "ค้นหาสูตรทำอาหาร 'ผัดไทยกุ้งสด' จากเว็บไซต์สอนทำอาหาร และสรุปวัตถุดิบหลัก",
-        "หาราคาหุ้นของบริษัท A ในตลาดหลักทรัพย์วันนี้ และบอกแนวโน้มคร่าวๆ",
-        "ค้นหาความหมายของคำว่า 'ออนโทโลยี' จากพจนานุกรมออนไลน์",
-        "ตรวจสอบว่าภาพยนตร์เรื่อง 'Inception' ได้รับรางวัลออสการ์สาขาใดบ้าง",
-        "ค้นหาข้อมูลเกี่ยวกับประวัติของกำแพงเมืองจีน และสรุปประเด็นสำคัญ 3 ข้อ",
-        "หาร้านอาหารอิตาเลียนที่ใกล้ที่สุดในระยะ 5 กิโลเมตรจากตำแหน่งปัจจุบัน (สมมติว่ามี API ตำแหน่งและร้านอาหาร)"
-    ]
-}
-
-if __name__ == "__main__":
-    output_dir = os.path.join("..", "..", "DataOutput")
-    os.makedirs(output_dir, exist_ok=True)
-    
-    output_file = os.path.join(output_dir, "thai_dataset_react.csv")
-
-    rows = []
-    for label, texts in categories.items():
-        for text in texts:
-            rows.append([str(uuid.uuid4()), text, label])
-
-    with open(output_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(['id', 'text', 'label'])
-        writer.writerows(rows)
-
-    print(f"Created {output_file}")
 

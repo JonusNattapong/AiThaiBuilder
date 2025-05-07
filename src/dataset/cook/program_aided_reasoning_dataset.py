@@ -5,8 +5,6 @@ import argparse
 import random
 from tqdm import tqdm
 import re
-import csv
-import uuid
 
 # Add project root to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -162,38 +160,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# สร้างข้อความสำหรับหมวดหมู่ program_aided_reasoning
-categories = {
-    "program_aided_reasoning": [
-        "คำนวณหาพื้นที่ของสามเหลี่ยมที่มีฐานยาว 15.5 เซนติเมตร และสูง 8.2 เซนติเมตร โดยใช้โปรแกรมช่วยคำนวณ",
-        "ถ้าอัตราแลกเปลี่ยนปัจจุบันคือ 1 ดอลลาร์สหรัฐ เท่ากับ 36.75 บาท เงิน 550 ดอลลาร์สหรัฐ จะแลกเป็นเงินไทยได้กี่บาท (ใช้โปรแกรมช่วย)",
-        "สร้างฟังก์ชันไพทอนเพื่อหาค่าเฉลี่ยของตัวเลขในลิสต์ [10, 25, 30, 45, 60]",
-        "แปลงอุณหภูมิจาก 77 องศาฟาเรนไฮต์ เป็นองศาเซลเซียส โดยใช้สูตร C = (F - 32) * 5/9 และให้โปรแกรมช่วยคำนวณ",
-        "หากเดินทางด้วยความเร็วเฉลี่ย 80 กิโลเมตรต่อชั่วโมง เป็นระยะทาง 300 กิโลเมตร จะใช้เวลาเดินทางกี่ชั่วโมง (ใช้โปรแกรมช่วยคำนวณ)",
-        "เขียนโปรแกรมเพื่อตรวจสอบว่าปี 2024 เป็นปีอธิกสุรทินหรือไม่",
-        "คำนวณดอกเบี้ยทบต้นของเงินฝาก 100,000 บาท อัตราดอกเบี้ย 3% ต่อปี เป็นเวลา 5 ปี โดยคิดดอกเบี้ยทบต้นปีละครั้ง (ใช้โปรแกรมช่วย)",
-        "สร้างโปรแกรมเพื่อสุ่มตัวเลขระหว่าง 1 ถึง 100 จำนวน 5 ตัวเลข",
-        "เขียนโค้ดเพื่อเรียงลำดับรายชื่อต่อไปนี้ตามตัวอักษร: ['สมชาย', 'วิไล', 'อำนาจ', 'พรทิพย์']",
-        "คำนวณหาค่าดัชนีมวลกาย (BMI) ของคนที่มีน้ำหนัก 68 กิโลกรัม และส่วนสูง 1.72 เมตร (ใช้โปรแกรมช่วย)"
-    ]
-}
-
-if __name__ == "__main__":
-    output_dir = os.path.join("..", "..", "DataOutput")
-    os.makedirs(output_dir, exist_ok=True)
-    
-    output_file = os.path.join(output_dir, "thai_dataset_program_aided_reasoning.csv")
-
-    rows = []
-    for label, texts in categories.items():
-        for text in texts:
-            rows.append([str(uuid.uuid4()), text, label])
-
-    with open(output_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(['id', 'text', 'label'])
-        writer.writerows(rows)
-
-    print(f"Created {output_file}")
 

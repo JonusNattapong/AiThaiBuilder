@@ -1,8 +1,3 @@
-import csv
-import uuid
-import os # Added import
-
-# สร้างข้อความสำหรับหมวดหมู่ job
 categories = {
     "job": [
         "การทำงานจากบ้านกลายเป็นเรื่องปกติ",
@@ -57,23 +52,3 @@ categories = {
         "ทักษะการบริหารการเงินส่วนบุคคล"
     ]
 }
-
-# สร้างรายการข้อมูลพร้อม ID
-rows = []
-for label, texts in categories.items():
-    for text in texts:
-        rows.append([str(uuid.uuid4()), text, label])
-
-# บันทึกเป็นไฟล์ CSV
-# Ensure output directory exists
-output_dir = os.path.join("..", "..", "DataOutput")
-os.makedirs(output_dir, exist_ok=True)
-
-output_file = os.path.join(output_dir, "thai_dataset_job.csv") # Standardized filename
-
-with open(output_file, 'w', newline='', encoding='utf-8') as f:
-    writer = csv.writer(f)
-    writer.writerow(['id', 'text', 'label'])
-    writer.writerows(rows)
-
-print(f"Created {output_file}") # Updated print statement

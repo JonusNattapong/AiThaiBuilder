@@ -4,8 +4,6 @@ import json
 import argparse
 import random
 from tqdm import tqdm
-import csv
-import uuid
 
 # Add project root to sys.path to allow importing from utils
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -138,39 +136,6 @@ def main():
         return
 
     generate_dataset(args.output_file, args.num_samples, api_key)
-
-    # Generate CSV file for Thai text prompts
-    categories = {
-        "chain_of_thought": [
-            "อธิบายขั้นตอนการวางแผนการเดินทางไปต่างประเทศครั้งแรก",
-            "ถ้าต้องการลดน้ำหนัก 5 กิโลกรัมภายใน 1 เดือน ควรทำอย่างไรบ้าง แสดงเหตุผลทีละขั้นตอน",
-            "นักเรียนคนหนึ่งต้องการเพิ่มเกรดวิชาคณิตศาสตร์จาก C เป็น A เขาควรวางแผนการเรียนอย่างไรบ้าง",
-            "หากต้องการเปิดร้านกาแฟเล็กๆ ต้องเตรียมตัวและดำเนินการอย่างไรบ้าง ให้บอกเป็นลำดับขั้น",
-            "อธิบายกระบวนการตัดสินใจเลือกซื้อคอมพิวเตอร์เครื่องใหม่ โดยพิจารณาจากปัจจัยต่างๆ",
-            "ถ้าเกิดเหตุการณ์ไฟไหม้ในอาคารสูง ควรปฏิบัติตนอย่างไรเพื่อความปลอดภัย แสดงเป็นขั้นตอน",
-            "วางแผนการจัดงานวันเกิดให้เพื่อนสนิท โดยมีงบประมาณจำกัด ต้องทำอะไรบ้าง",
-            "อธิบายวิธีแก้ปัญหาเมื่อรถยนต์สตาร์ทไม่ติดเบื้องต้น ควรตรวจสอบอะไรบ้างตามลำดับ",
-            "ถ้าต้องการเรียนรู้ทักษะการเขียนโปรแกรม ควรเริ่มต้นอย่างไร และมีขั้นตอนการพัฒนาตนเองอย่างไร",
-            "อธิบายกระบวนการยื่นภาษีเงินได้บุคคลธรรมดาผ่านระบบออนไลน์ทีละขั้นตอน"
-        ]
-    }
-
-    output_dir = os.path.join("..", "..", "DataOutput")
-    os.makedirs(output_dir, exist_ok=True)
-    
-    output_file = os.path.join(output_dir, "thai_dataset_chain_of_thought.csv")
-
-    rows = []
-    for label, texts in categories.items():
-        for text in texts:
-            rows.append([str(uuid.uuid4()), text, label])
-
-    with open(output_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(['id', 'text', 'label'])
-        writer.writerows(rows)
-
-    print(f"Created {output_file}")
 
 if __name__ == "__main__":
     main()

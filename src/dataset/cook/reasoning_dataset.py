@@ -4,13 +4,11 @@ import json
 import argparse
 import random
 from tqdm import tqdm
-import csv
-import uuid
 
 # Add project root to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root_dir = os.path.abspath(os.path.join(current_dir, '..', '..', '..'))
-if project_root_dir not in sys.path:
+if (project_root_dir not in sys.path):
     sys.path.insert(0, project_root_dir)
 
 from utils.deepseek_utils import generate_with_deepseek, get_deepseek_api_key
@@ -44,18 +42,17 @@ def process_reasoning_response(problem_type: str, problem_description: str, llm_
         reasoning = ""
         answer = ""
 
-        if reasoning_start != -1 and answer_start != -1:
+        if (reasoning_start != -1 and answer_start != -1):
             reasoning = llm_response[reasoning_start + len(reasoning_marker):answer_start].strip()
             answer = llm_response[answer_start + len(answer_marker):].strip()
-        elif reasoning_start != -1: # Only reasoning found
+        elif (reasoning_start != -1): # Only reasoning found
             reasoning = llm_response[reasoning_start + len(reasoning_marker):].strip()
             answer = "Parsing Error: Answer not found"
         else: # Fallback
             reasoning = "Parsing Error: Reasoning not found"
             answer = "Parsing Error: Answer not found"
-            if answer_marker in llm_response: # Check if only answer is present
+            if (answer_marker in llm_response): # Check if only answer is present
                  answer = llm_response[llm_response.find(answer_marker) + len(answer_marker):].strip()
-
 
         return {
             "problem_type": problem_type,
@@ -100,7 +97,7 @@ def generate_dataset(output_file: str, num_samples: int, api_key: str):
         
         llm_response = generate_with_deepseek(messages, api_key)
 
-        if llm_response and not llm_response.startswith("Error:"):
+        if (llm_response and not llm_response.startswith("Error:")):
             processed_sample = process_reasoning_response(problem_type, problem_description, llm_response)
             generated_samples.append(processed_sample)
         else:
@@ -135,38 +132,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# สร้างข้อความสำหรับหมวดหมู่ general_reasoning
-categories = {
-    "general_reasoning": [
-        "ถ้าฝนตกหนัก การจราจรมีแนวโน้มจะเป็นอย่างไร เพราะเหตุใด",
-        "แมวทุกตัวเป็นสัตว์เลี้ยงลูกด้วยนม สัตว์เลี้ยงลูกด้วยนมทุกตัวหายใจด้วยปอด ดังนั้นแมวหายใจด้วยปอดหรือไม่ เพราะเหตุใด",
-        "หากราคาของสินค้า A เพิ่มขึ้น แต่ความต้องการสินค้า A ไม่เปลี่ยนแปลง ยอดขายของสินค้า A จะเป็นอย่างไร",
-        "นาย ก วิ่งเร็วกว่านาย ข แต่นาย ข วิ่งเร็วกว่านาย ค ใครวิ่งช้าที่สุด",
-        "ถ้าวันนี้เป็นวันพุธ อีก 3 วันข้างหน้าจะเป็นวันอะไร",
-        "ในตะกร้ามีผลไม้ 3 ชนิด คือ ส้ม แอปเปิ้ล และกล้วย หากหยิบผลไม้มา 1 ชิ้นโดยไม่มอง โอกาสที่จะหยิบได้ส้มเป็นเท่าใด ถ้ามีส้ม 5 ลูก แอปเปิ้ล 3 ลูก และกล้วย 2 ลูก",
-        "ถ้า 'นก' สัมพันธ์กับ 'บิน' แล้ว 'ปลา' สัมพันธ์กับอะไร",
-        "หากต้องการเดินทางจากกรุงเทพไปเชียงใหม่ วิธีใดใช้เวลาน้อยที่สุดระหว่างเครื่องบิน รถไฟ และรถยนต์ส่วนตัว เพราะเหตุใด",
-        "ถ้า A=1, B=2, C=3 แล้วคำว่า 'CAB' จะมีค่าเท่ากับเท่าไร",
-        "ทำไมน้ำแข็งจึงลอยน้ำได้"
-    ]
-}
-
-if __name__ == "__main__":
-    output_dir = os.path.join("..", "..", "DataOutput")
-    os.makedirs(output_dir, exist_ok=True)
-    
-    output_file = os.path.join(output_dir, "thai_dataset_general_reasoning.csv")
-
-    rows = []
-    for label, texts in categories.items():
-        for text in texts:
-            rows.append([str(uuid.uuid4()), text, label])
-
-    with open(output_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(['id', 'text', 'label'])
-        writer.writerows(rows)
-
-    print(f"Created {output_file}")
 

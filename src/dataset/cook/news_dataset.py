@@ -1,4 +1,4 @@
-new_categories = {
+categories = {
     "news": [
         "นักเรียนไทยคว้าเหรียญทองคณิตศาสตร์โอลิมปิก",
         "กระทรวงแรงงานเปิดโครงการฝึกอาชีพใหม่",
@@ -51,25 +51,3 @@ new_categories = {
         "ครม. อนุมัติงบฟื้นฟูพื้นที่ประสบภัยพิบัติ"
     ]
 }
-
-# Assuming new_categories is defined earlier, e.g., new_categories = {}
-new_categories.update({
-    "news": [
-        "นายกรัฐมนตรีแถลงนโยบายเศรษฐกิจใหม่",
-        "เกิดเหตุแผ่นดินไหวรุนแรงที่ประเทศเพื่อนบ้าน",
-        "กรมควบคุมโรคเตือนโรคไข้เลือดออกระบาด",
-        "ครม. อนุมัติงบฟื้นฟูพื้นที่ประสบภัยพิบัติ"
-    ]
-})
-
-# สร้างรายการข้อมูลพร้อม ID
-rows = []
-for label, texts in new_categories.items():
-    for text in texts:
-        rows.append([str(uuid.uuid4()), text, label])
-
-# บันทึกเป็นไฟล์ CSV
-with open('DataOutput/thai_dataset_news_extended.csv', 'w', newline='', encoding='utf-8') as f:
-    writer = csv.writer(f)
-    writer.writerow(['id', 'text', 'label'])
-    writer.writerows(rows)

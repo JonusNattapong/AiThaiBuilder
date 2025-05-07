@@ -1,12 +1,4 @@
-import csv
-import uuid
-
-# new_categories should be defined or imported before this
-# Assuming new_categories = {} or similar is present if this is the first mention
-# For example:
-new_categories = {} # Add this line if new_categories is not defined before .update()
-
-new_categories.update({
+categories = {
     "conversation": [
         "เมื่อวานนี้มีประชุมเหนื่อยมากเลย",
         "วันหยุดนี้มีแผนจะไปเที่ยวไหม",
@@ -58,15 +50,4 @@ new_categories.update({
         "แนะนำหนังรักโรแมนติกหน่อย",
         "วันนี้มีเรื่องดี ๆ อะไรเกิดขึ้นบ้างไหม"
     ]
-})
-
-rows = []
-for label, texts in new_categories.items():
-    for text in texts:
-        rows.append([str(uuid.uuid4()), text, label])
-
-# บันทึกลง CSV
-with open('DataOutput/thai_dataset_extended_part1.csv', 'w', newline='', encoding='utf-8') as f:
-    writer = csv.writer(f)
-    writer.writerow(['id', 'text', 'label'])
-    writer.writerows(rows)
+}

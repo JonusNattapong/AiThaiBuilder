@@ -1,0 +1,58 @@
+{
+  "dataset_info": {
+    "filename": "processed/sentiment_dataset.csv",
+    "total_samples": 110,
+    "timestamp": "2025-05-08 01:53:54"
+  },
+  "analyses": {
+    "label_distribution": {
+      "distribution": {
+        "sentiment": {
+          "count": 110,
+          "percentage": "100.0%"
+        }
+      },
+      "plot": "analysis_results\\analysis_20250508_015354\\plots\\label_distribution.png"
+    },
+    "text_statistics": {
+      "stats": {
+        "text_length": {
+          "mean": "358.4",
+          "median": "369.5",
+          "min": "172.0",
+          "max": "429.0"
+        },
+        "word_count": {
+          "mean": "94.3",
+          "median": "97.0",
+          "min": "51.0",
+          "max": "118.0"
+        }
+      },
+      "plot": "analysis_results\\analysis_20250508_015354\\plots\\text_statistics.png"
+    },
+    "thai_features": {
+      "pos_distribution": {
+        "NCMN": 3227,
+        "PUNC": 1513,
+        "VACT": 993,
+        "VSTA": 734,
+        "JSBR": 506,
+        "RPRE": 387,
+        "XVAE": 359,
+        "PREL": 352,
+        "ADVN": 340,
+        "PPRS": 317
+      },
+      "known_words_stats": {
+        "average_ratio": "77.12%",
+        "min_ratio": "66.97%",
+        "max_ratio": "87.06%"
+      },
+      "plots": {
+        "pos_distribution": "analysis_results\\analysis_20250508_015354\\plots\\pos_distribution.png",
+        "known_words_ratio": "analysis_results\\analysis_20250508_015354\\plots\\known_words_ratio.png"
+      }
+    }
+  }
+}

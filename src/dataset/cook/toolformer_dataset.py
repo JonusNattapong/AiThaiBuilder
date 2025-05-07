@@ -4,8 +4,6 @@ import json
 import argparse
 import random
 from tqdm import tqdm
-import csv
-import uuid
 
 # Add project root to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -136,16 +134,4 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
     
     output_file = os.path.join(output_dir, "thai_dataset_toolformer.csv")
-
-    rows = []
-    for label, texts in categories.items():
-        for text in texts:
-            rows.append([str(uuid.uuid4()), text, label])
-
-    with open(output_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(['id', 'text', 'label'])
-        writer.writerows(rows)
-
-    print(f"Created {output_file}")
 
