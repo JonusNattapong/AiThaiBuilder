@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.png" alt="RunThaiGenDataset Banner" width="600"/>
+  <img src="assets/banner.png" alt="RunThaiGenDataset Banner" hight="150" width="150"/>
 </p>
 
 <h1 align="center">RunThaiGenDataset</h1>
