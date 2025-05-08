@@ -4,14 +4,16 @@
 """
 Dataset In-Place Translation Script
 
-This script translates datasets between languages (en-th, zh-th) and overwrites the original files
+This script translates datasets between languages (en-th, zh-th, hi-th) and overwrites the original files
 to maintain dataset integrity. It supports various dataset formats including JSON, CSV, and JSONL.
+Fields to translate can be specified or automatically detected.
 
 Usage:
     python translate_dataset_inplace.py --input [INPUT_FILE] --source-lang [SRC_LANG] --target-lang [TGT_LANG] [--fields FIELD1 FIELD2 ...]
     
 Example:
-    python translate_dataset_inplace.py --input dataset.json --source-lang en --target-lang th --fields text content
+    python translate_dataset_inplace.py --input dataset.json --source-lang hi --target-lang th --fields text content
+    python translate_dataset_inplace.py --input dataset.csv --source-lang hi --target-lang th  # Auto-detect fields
 """
 
 import os
@@ -27,19 +29,31 @@ import queue
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import List, Dict, Optional
+from retrying import retry
+import random
+from nltk.translate.bleu_score import sentence_bleu
+from nltk.translate.meteor_score import meteor_score
+from rouge_score import rouge_scorer
+import nltk
+
+# Download data for METEOR
+nltk.download('wordnet', quiet=True)
 
 # Add project root to Python path for imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
-script_dir = os.path.dirname(os.path.dirname(current_dir))
-project_root = os.path.dirname(os.path.dirname(script_dir))
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 # Import utils
 from utils.deepseek_utils import get_deepseek_api_key, generate_with_deepseek
 from utils.deepseek_translation_utils import (
-    generate_en_to_th_translation,
-    generate_zh_to_th_translation
+    generate_translation_sample,
+    detect_language_with_deepseek,
+    generate_reference_translation,
+    check_translation_quality,
+    refine_translation
 )
 
 # Configure logging
@@ -57,13 +71,16 @@ logger = logging.getLogger(__name__)
 os.makedirs(os.path.join(project_root, 'logs'), exist_ok=True)
 
 # Constants
-SUPPORTED_SOURCE_LANGS = ['en', 'zh']
+SUPPORTED_SOURCE_LANGS = ['en', 'zh', 'hi']  # เพิ่ม hi
 SUPPORTED_TARGET_LANGS = ['th']
 SUPPORTED_FILE_FORMATS = ['.json', '.jsonl', '.csv']
 DEFAULT_BATCH_SIZE = 5
 MAX_THREADS = 10
 DEFAULT_MAX_RETRIES = 3
 DEFAULT_CONTENT_MAX_LENGTH = 10000  # Maximum length of content to translate in a single API call
+QUALITY_CHECK_PROBABILITY = 0.1
+QUALITY_THRESHOLD = 0.5
+METRIC_WEIGHTS = {'bleu': 0.3, 'rouge': 0.3, 'meteor': 0.4}
 
 # Translation progress tracking
 class TranslationProgress:
@@ -72,15 +89,18 @@ class TranslationProgress:
         self.completed = 0
         self.successful = 0
         self.failed = 0
+        self.refinements = 0
         self.lock = threading.Lock()
         
-    def update(self, success=True):
+    def update(self, success=True, refined=False):
         with self.lock:
             self.completed += 1
             if success:
                 self.successful += 1
             else:
                 self.failed += 1
+            if refined:
+                self.refinements += 1
                 
     def get_stats(self):
         with self.lock:
@@ -89,6 +109,7 @@ class TranslationProgress:
                 'completed': self.completed,
                 'successful': self.successful,
                 'failed': self.failed,
+                'refinements': self.refinements,
                 'progress_percent': (self.completed / self.total * 100) if self.total > 0 else 0
             }
 
@@ -164,56 +185,97 @@ def save_dataset(data, file_path, original_format=None):
         logger.info(f"Original dataset backup is available at: {backup_path}")
         return False
 
+def find_fields_to_translate(data: List[Dict], source_lang: str, api_key: str, sample_size: int = 5) -> List[str]:
+    """
+    Automatically detect fields containing text in the source language using Deepseek.
+    """
+    field_counts = {}
+    text_samples = {}
+
+    # Collect samples from all fields
+    for item in data[:100]:  # Limit to first 100 items to avoid excessive API calls
+        if not isinstance(item, dict):
+            continue
+        for key, value in item.items():
+            if isinstance(value, str) and value.strip() and value.strip() != "nan":
+                if key not in text_samples:
+                    text_samples[key] = []
+                text_samples[key].append(value)
+            elif isinstance(value, list) and all(isinstance(v, str) for v in value):
+                if key not in text_samples:
+                    text_samples[key] = []
+                text_samples[key].extend([v for v in value if v.strip() and v.strip() != "nan"])
+
+    # Detect language for sampled texts
+    fields_to_translate = []
+    for field, samples in text_samples.items():
+        if not samples:
+            continue
+        # Sample up to sample_size texts
+        sample_texts = random.sample(samples, min(sample_size, len(samples)))
+        source_lang_count = 0
+
+        for text in sample_texts:
+            detected_lang = detect_language_with_deepseek(text, api_key)
+            if detected_lang == source_lang.upper():
+                source_lang_count += 1
+
+        # Select field if more than 50% of samples are in source language
+        if source_lang_count / len(sample_texts) > 0.5:
+            fields_to_translate.append(field)
+            logger.info(f"Selected field '{field}' for translation (source language detected in {source_lang_count}/{len(sample_texts)} samples)")
+
+    if not fields_to_translate:
+        logger.warning("No fields found with source language texts")
+    return fields_to_translate
+
 def translate_text(text, source_lang, target_lang, api_key, additional_instructions="", max_retries=DEFAULT_MAX_RETRIES):
-    """Translate text from source language to target language."""
-    if not text or len(text.strip()) == 0:
-        return text
+    """Translate text from source language to target language with quality checking."""
+    if not text or len(text.strip()) == 0 or text.strip() == "nan":
+        return text, False
     
-    # Handle excessively long text by splitting into chunks if needed
+    # Handle excessively long text by splitting into chunks
     if len(text) > DEFAULT_CONTENT_MAX_LENGTH:
         logger.warning(f"Text exceeds maximum length ({len(text)} > {DEFAULT_CONTENT_MAX_LENGTH}). Splitting for translation.")
-        # Simple split approach - could be improved to handle sentences better
         chunks = []
         for i in range(0, len(text), DEFAULT_CONTENT_MAX_LENGTH):
             chunks.append(text[i:i+DEFAULT_CONTENT_MAX_LENGTH])
         
         translated_chunks = []
+        was_refined = False
         for chunk in chunks:
-            translated_chunk = translate_text(chunk, source_lang, target_lang, api_key, additional_instructions, max_retries)
+            translated_chunk, chunk_refined = translate_text(chunk, source_lang, target_lang, api_key, additional_instructions, max_retries)
             translated_chunks.append(translated_chunk)
+            if chunk_refined:
+                was_refined = True
         
-        return "".join(translated_chunks)
-    
-    # Choose appropriate translation function
-    if source_lang == 'en' and target_lang == 'th':
-        translate_func = generate_en_to_th_translation
-    elif source_lang == 'zh' and target_lang == 'th':
-        translate_func = generate_zh_to_th_translation
-    else:
-        # Fallback for unsupported language pairs - construct a generic translation request
-        def generic_translate(text, api_key, additional_instructions=""):
-            system_prompt = f"You are an expert translator from {source_lang} to {target_lang}."
-            user_prompt = f"Translate the following text from {source_lang} to {target_lang}:\n\n{text}"
-            if additional_instructions:
-                user_prompt += f"\n\nAdditional instructions: {additional_instructions}"
-            
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ]
-            return generate_with_deepseek(messages, api_key)
-        
-        translate_func = generic_translate
+        return "".join(translated_chunks), was_refined
     
     # Attempt translation with retries
     for attempt in range(max_retries):
         try:
-            translated = translate_func(text, api_key, additional_instructions)
+            translated = generate_translation_sample(text, source_lang, target_lang, api_key, additional_instructions)
             if translated and not translated.startswith("Error"):
-                return translated
+                # Quality check
+                final_translation = translated
+                was_refined = False
+                if random.random() < QUALITY_CHECK_PROBABILITY:
+                    reference_text = generate_reference_translation(text, source_lang, target_lang, api_key)
+                    if reference_text:
+                        quality_score = check_translation_quality(translated, reference_text, api_key)
+                        logger.info(f"Quality scores for text: BLEU={quality_score['bleu']:.2f}, ROUGE={quality_score['rouge']:.2f}, METEOR={quality_score['meteor']:.2f}, Average={quality_score['average']:.2f}")
+                        
+                        if quality_score['average'] < QUALITY_THRESHOLD:
+                            refined_text = refine_translation(text, translated, source_lang, target_lang, api_key, quality_score)
+                            refined_score = check_translation_quality(refined_text, reference_text, api_key)
+                            if refined_score['average'] > quality_score['average']:
+                                final_translation = refined_text
+                                was_refined = True
+                                logger.info(f"Refined translation, new average score: {refined_score['average']:.2f}")
+                return final_translation, was_refined
             
             logger.warning(f"Translation attempt {attempt+1}/{max_retries} failed: {translated[:100]}...")
-            time.sleep(2)  # Short delay between retries
+            time.sleep(2)
             
         except Exception as e:
             logger.error(f"Translation error (attempt {attempt+1}/{max_retries}): {str(e)}")
@@ -221,7 +283,7 @@ def translate_text(text, source_lang, target_lang, api_key, additional_instructi
     
     # If all retries fail, return original text
     logger.error(f"Translation failed after {max_retries} attempts. Keeping original text.")
-    return text
+    return text, False
 
 def process_nested_dict(obj, fields_to_translate, source_lang, target_lang, api_key, translation_queue, path=""):
     """Process nested dictionaries and translate specified fields."""
@@ -231,14 +293,11 @@ def process_nested_dict(obj, fields_to_translate, source_lang, target_lang, api_
             
             if key in fields_to_translate:
                 if isinstance(value, str):
-                    # Add to translation queue rather than translating immediately
                     translation_queue.put((value, current_path, obj, key))
                 elif isinstance(value, list) and all(isinstance(item, str) for item in value):
-                    # For lists of strings, queue each item for translation
                     for i, item in enumerate(value):
                         translation_queue.put((item, f"{current_path}[{i}]", value, i))
             
-            # Continue recursion for nested objects
             if isinstance(value, (dict, list)):
                 process_nested_dict(value, fields_to_translate, source_lang, target_lang, api_key, translation_queue, current_path)
     
@@ -252,21 +311,19 @@ def translation_worker(queue, source_lang, target_lang, api_key, progress, max_r
     while True:
         try:
             item = queue.get(block=False)
-            if item is None:  # Sentinel value
+            if item is None:
                 break
                 
             text, path, parent, key = item
             
             try:
-                translated_text = translate_text(text, source_lang, target_lang, api_key, max_retries=max_retries)
-                # Update the original data structure
+                translated_text, was_refined = translate_text(text, source_lang, target_lang, api_key, max_retries=max_retries)
                 parent[key] = translated_text
-                progress.update(success=True)
+                progress.update(success=True, refined=was_refined)
             except Exception as e:
                 logger.error(f"Error translating text at {path}: {str(e)}")
                 progress.update(success=False)
             
-            # Short delay to avoid API rate limits
             time.sleep(0.5)
             
         except queue.Empty:
@@ -274,13 +331,10 @@ def translation_worker(queue, source_lang, target_lang, api_key, progress, max_r
 
 def translate_dataset(data, fields_to_translate, source_lang, target_lang, api_key, num_threads=MAX_THREADS):
     """Translate dataset fields."""
-    # Create a queue for translation tasks
     translation_queue = queue.Queue()
     
-    # First pass: identify all fields that need translation and add to queue
     process_nested_dict(data, fields_to_translate, source_lang, target_lang, api_key, translation_queue)
     
-    # Get queue size for progress tracking
     queue_size = translation_queue.qsize()
     logger.info(f"Found {queue_size} items to translate")
     
@@ -288,10 +342,8 @@ def translate_dataset(data, fields_to_translate, source_lang, target_lang, api_k
         logger.warning(f"No fields matching {fields_to_translate} found in the dataset for translation")
         return data
     
-    # Initialize progress tracker
     progress = TranslationProgress(queue_size)
     
-    # Create a copy of the queue for each thread
     queues = []
     items = []
     while not translation_queue.empty():
@@ -300,7 +352,6 @@ def translate_dataset(data, fields_to_translate, source_lang, target_lang, api_k
         except queue.Empty:
             break
     
-    # Create balanced queues for workers
     num_workers = min(num_threads, len(items))
     if num_workers == 0:
         return data
@@ -319,7 +370,6 @@ def translate_dataset(data, fields_to_translate, source_lang, target_lang, api_k
         start_idx += worker_items
         queues.append(worker_queue)
     
-    # Create and start worker threads
     threads = []
     for i in range(num_workers):
         thread = threading.Thread(
@@ -329,7 +379,6 @@ def translate_dataset(data, fields_to_translate, source_lang, target_lang, api_k
         thread.start()
         threads.append(thread)
     
-    # Show progress
     with tqdm(total=queue_size, desc=f"Translating {source_lang} to {target_lang}") as pbar:
         completed_prev = 0
         while any(thread.is_alive() for thread in threads):
@@ -339,13 +388,11 @@ def translate_dataset(data, fields_to_translate, source_lang, target_lang, api_k
             completed_prev = completed_current
             time.sleep(0.1)
     
-    # Wait for all threads to complete
     for thread in threads:
         thread.join()
     
-    # Final statistics
     stats = progress.get_stats()
-    logger.info(f"Translation completed: {stats['successful']} successful, {stats['failed']} failed")
+    logger.info(f"Translation completed: {stats['successful']} successful, {stats['failed']} failed, {stats['refinements']} refined")
     
     return data
 
@@ -362,8 +409,8 @@ def parse_args():
     parser.add_argument('--target-lang', type=str, required=True, choices=SUPPORTED_TARGET_LANGS,
                         help='Target language code')
     
-    parser.add_argument('--fields', type=str, nargs='+', required=True,
-                        help='Field names to translate')
+    parser.add_argument('--fields', type=str, nargs='*',
+                        help='Field names to translate (leave empty for auto-detection)')
     
     parser.add_argument('--api-key', type=str,
                         help='Deepseek API key (will use environment variable if not provided)')
@@ -378,21 +425,17 @@ def parse_args():
 
 def main():
     """Main function."""
-    # Parse arguments
     args = parse_args()
     
-    # Validate input file
     if not os.path.isfile(args.input):
         logger.error(f"Input file not found: {args.input}")
         sys.exit(1)
     
-    # Get API key
     api_key = args.api_key or get_deepseek_api_key()
     if not api_key:
         logger.error("Deepseek API key not found. Please provide it as an argument or set it in your environment.")
         sys.exit(1)
     
-    # Load dataset
     try:
         logger.info(f"Loading dataset from {args.input}")
         data = load_dataset(args.input)
@@ -402,12 +445,28 @@ def main():
         logger.error(f"Failed to load dataset: {str(e)}")
         sys.exit(1)
     
-    # Translate dataset
+    # Determine fields to translate
+    fields_to_translate = args.fields if args.fields else []
+    if not fields_to_translate:
+        logger.info(f"No fields specified. Auto-detecting fields with {args.source_lang} text.")
+        fields_to_translate = find_fields_to_translate(data, args.source_lang, api_key)
+        if not fields_to_translate:
+            logger.error("No fields found to translate. Exiting.")
+            sys.exit(1)
+    else:
+        # Validate specified fields
+        sample_item = data[0] if data and isinstance(data, list) and isinstance(data[0], dict) else {}
+        missing_fields = [f for f in fields_to_translate if f not in sample_item]
+        if missing_fields:
+            logger.error(f"Specified fields not found in dataset: {missing_fields}")
+            sys.exit(1)
+        logger.info(f"Using specified fields for translation: {fields_to_translate}")
+    
     try:
-        logger.info(f"Starting translation from {args.source_lang} to {args.target_lang} for fields: {', '.join(args.fields)}")
+        logger.info(f"Starting translation from {args.source_lang} to {args.target_lang} for fields: {', '.join(fields_to_translate)}")
         translated_data = translate_dataset(
             data=data,
-            fields_to_translate=args.fields,
+            fields_to_translate=fields_to_translate,
             source_lang=args.source_lang,
             target_lang=args.target_lang,
             api_key=api_key,
@@ -418,7 +477,6 @@ def main():
         logger.error(f"Translation process failed: {str(e)}")
         sys.exit(1)
     
-    # Save translated dataset (if not dry run)
     if not args.dry_run:
         try:
             logger.info(f"Saving translated dataset to {args.input} (original file will be backed up)")
