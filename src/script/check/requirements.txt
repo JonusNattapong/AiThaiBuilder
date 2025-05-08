@@ -1,0 +1,10 @@
+pandas
+numpy
+matplotlib
+seaborn
+pythainlp>=4.0.2
+scikit-learn
+reportlab
+networkx
+sentence-transformers
+PyYAML

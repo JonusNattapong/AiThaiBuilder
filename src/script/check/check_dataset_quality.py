@@ -21,6 +21,13 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import io
 
+# นำเข้าฟังก์ชันวิเคราะห์ขั้นสูง
+try:
+    from advanced_quality_check import run_advanced_quality_check
+    ADVANCED_CHECKS_AVAILABLE = True
+except ImportError:
+    ADVANCED_CHECKS_AVAILABLE = False
+
 def setup_output_directories(base_dir):
     """Setup directory structure for analysis outputs"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -170,94 +177,6 @@ def analyze_thai_features(df, plots_dir):
         }
     }
 
-def main():
-    parser = argparse.ArgumentParser(description='Check dataset quality')
-    parser.add_argument('--input_file', type=str, required=True,
-                      help='Path to input CSV file')
-    parser.add_argument('--output_dir', type=str, default='analysis_output',
-                      help='Base directory for analysis outputs')
-    
-    try:
-        args = parser.parse_args()
-        
-        print(f"\nAnalyzing dataset: {args.input_file}")
-        print("=" * 50)
-        
-        # Setup output directories
-        print(f"\nSetting up output directories in {args.output_dir}...")
-        dirs, output_dir = setup_output_directories(args.output_dir)
-        
-        # Load dataset
-        print(f"\nLoading dataset...")
-        if not os.path.exists(args.input_file):
-            print(f"Error: Input file not found: {args.input_file}")
-            return
-        
-        df = pd.read_csv(args.input_file)
-        print(f"Successfully loaded {len(df)} samples")
-        
-        # Run analyses
-        results = {
-            'dataset_info': {
-                'filename': args.input_file,
-                'total_samples': len(df),
-                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            },
-            'analyses': {}
-        }
-        
-        # Label distribution
-        dist_results = analyze_distribution(df, dirs['plots'])
-        results['analyses']['label_distribution'] = dist_results
-        
-        # Text statistics
-        stats_results, stats_plot = analyze_text_stats(df, dirs['plots'])
-        results['analyses']['text_statistics'] = {
-            'stats': stats_results,
-            'plot': stats_plot
-        }
-        
-        # Thai features
-        thai_results = analyze_thai_features(df, dirs['plots'])
-        results['analyses']['thai_features'] = thai_results
-        
-        # Save final results
-        print("\nSaving analysis results...")
-        save_json(results, 'analysis_results.json', dirs['stats'])
-        
-        # Generate and save report
-        report = ["Dataset Quality Analysis Report", "=" * 30 + "\n"]
-        report.append(f"Dataset: {args.input_file}")
-        report.append(f"Total samples: {len(df)}")
-        report.append(f"Analysis timestamp: {results['dataset_info']['timestamp']}\n")
-        
-        for section, data in results['analyses'].items():
-            report.append(f"\n{section.upper()}")
-            report.append("-" * len(section))
-            if isinstance(data, dict):
-                report.extend([f"{k}: {v}" for k, v in data.items() 
-                             if k not in ['plot', 'plots']])
-        
-        # Generate PDF report
-        print("\nGenerating PDF report...")
-        pdf_path = os.path.join(output_dir, 'dataset_quality_report.pdf')
-        generate_pdf_report(results, report, pdf_path)
-        
-        print("\nAnalysis complete!")
-        print("=" * 50)
-        print(f"Results saved in: {output_dir}")
-        print(f"- Full PDF Report: {pdf_path}")
-        print(f"- Individual files:")
-        print(f"  - Plots: {dirs['plots']}")
-        print(f"  - Report: {dirs['reports']}")
-        print(f"  - Statistics: {dirs['stats']}")
-        
-    except Exception as e:
-        print(f"\nError during analysis:")
-        import traceback
-        print(traceback.format_exc())
-        return
-
 def generate_pdf_report(results, text_report, output_path):
     """Generate comprehensive PDF report"""
     doc = SimpleDocTemplate(
@@ -354,6 +273,121 @@ def generate_pdf_report(results, text_report, output_path):
     # สร้าง PDF
     doc.build(story)
     print(f"PDF report saved to: {output_path}")
+
+def main():
+    parser = argparse.ArgumentParser(description='Check dataset quality')
+    parser.add_argument('--input_file', type=str, required=True,
+                      help='Path to input CSV file')
+    parser.add_argument('--output_dir', type=str, default='analysis_output',
+                      help='Base directory for analysis outputs')
+    parser.add_argument('--advanced', action='store_true',
+                      help='Run advanced quality checks (hallucination, bias, duplication)')
+    parser.add_argument('--reference_file', type=str, default=None,
+                      help='Path to reference data file for fact checking')
+    parser.add_argument('--similarity_threshold', type=float, default=0.85,
+                      help='Threshold for text similarity detection (0.0-1.0)')
+    
+    try:
+        args = parser.parse_args()
+        
+        print(f"\nAnalyzing dataset: {args.input_file}")
+        print("=" * 50)
+        
+        # Setup output directories
+        print(f"\nSetting up output directories in {args.output_dir}...")
+        dirs, output_dir = setup_output_directories(args.output_dir)
+        
+        # Load dataset
+        print(f"\nLoading dataset...")
+        if not os.path.exists(args.input_file):
+            print(f"Error: Input file not found: {args.input_file}")
+            return
+        
+        df = pd.read_csv(args.input_file)
+        print(f"Successfully loaded {len(df)} samples")
+        
+        # Run basic analyses
+        results = {
+            'dataset_info': {
+                'filename': args.input_file,
+                'total_samples': len(df),
+                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            },
+            'analyses': {}
+        }
+        
+        # Label distribution
+        dist_results = analyze_distribution(df, dirs['plots'])
+        results['analyses']['label_distribution'] = dist_results
+        
+        # Text statistics
+        stats_results, stats_plot = analyze_text_stats(df, dirs['plots'])
+        results['analyses']['text_statistics'] = {
+            'stats': stats_results,
+            'plot': stats_plot
+        }
+        
+        # Thai features
+        thai_results = analyze_thai_features(df, dirs['plots'])
+        results['analyses']['thai_features'] = thai_results
+        
+        # Save final results
+        print("\nSaving analysis results...")
+        save_json(results, 'analysis_results.json', dirs['stats'])
+        
+        # Generate and save report
+        report = ["Dataset Quality Analysis Report", "=" * 30 + "\n"]
+        report.append(f"Dataset: {args.input_file}")
+        report.append(f"Total samples: {len(df)}")
+        report.append(f"Analysis timestamp: {results['dataset_info']['timestamp']}\n")
+        
+        for section, data in results['analyses'].items():
+            report.append(f"\n{section.upper()}")
+            report.append("-" * len(section))
+            if isinstance(data, dict):
+                report.extend([f"{k}: {v}" for k, v in data.items() 
+                             if k not in ['plot', 'plots']])
+        
+        # Generate PDF report
+        print("\nGenerating PDF report...")
+        pdf_path = os.path.join(output_dir, 'dataset_quality_report.pdf')
+        generate_pdf_report(results, report, pdf_path)
+        
+        # Run advanced analyses if requested
+        if args.advanced:
+            if ADVANCED_CHECKS_AVAILABLE:
+                print("\n=== Running Advanced Quality Checks ===")
+                advanced_results = run_advanced_quality_check(
+                    df, 
+                    text_column='text',
+                    output_dir=args.output_dir,
+                    ref_data=None if not args.reference_file else args.reference_file,
+                    similarity_threshold=args.similarity_threshold
+                )
+                
+                # Add reference to advanced results in the basic report
+                with open(os.path.join(dirs['reports'], 'basic_quality_report.txt'), 'w', encoding='utf-8') as f:
+                    f.write('\n'.join(report))
+                    f.write("\n\n=== ADVANCED ANALYSIS ===\n")
+                    f.write(f"Advanced analysis results available at: {advanced_results['output_dir']}")
+            else:
+                print("\nWarning: Advanced quality checks were requested but the 'advanced_quality_check' module is not available.")
+                print("Please make sure the module is installed correctly.")
+        
+        print("\nAnalysis complete!")
+        print("=" * 50)
+        print(f"Results saved in: {output_dir}")
+        print(f"- Full PDF Report: {pdf_path}")
+        print(f"- Individual files:")
+        print(f"  - Plots: {dirs['plots']}")
+        print(f"  - Report: {dirs['reports']}")
+        print(f"  - Statistics: {dirs['stats']}")
+        
+    except Exception as e:
+        print(f"\nError during analysis:")
+        import traceback
+        print(traceback.format_exc())
+        return
 
 if __name__ == "__main__":
     main()

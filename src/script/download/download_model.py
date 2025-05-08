@@ -11,11 +11,11 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # --- Configuration ---
-MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.3"  # Typhoon 7B Instruct model
+MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"  # Typhoon 7B Instruct model
 # Determine the base path
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Define the target directory to save the model
-SAVE_DIRECTORY = os.path.join(BASE_PATH, 'ModelUse', MODEL_NAME.split('/')[-1])
+SAVE_DIRECTORY = os.path.join(BASE_PATH, 'model/work', MODEL_NAME.split('/')[-1])
 
 # --- Main Download Logic ---
 def download_model():
