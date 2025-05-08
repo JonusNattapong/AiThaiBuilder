@@ -13,6 +13,7 @@ RunThaiGenDataset is a powerful and flexible tool designed to generate high-qual
     -   And many more! (Refer to `config/config.json` for a full list)
 -   **Powered by Deepseek API:** Utilizes state-of-the-art language models for generating coherent and contextually relevant Thai text.
 -   **Customizable Prompts:** Allows users to define custom system prompts and additional instructions to tailor the generation process.
+-   **Dataset Quality Analysis:** Includes tools to analyze and validate dataset quality with comprehensive reports and visualizations.
 -   **User-Friendly Interface:** Built with Gradio for an intuitive web-based experience, making dataset creation accessible to everyone.
 -   **Batch Generation:** Easily generate multiple samples for your datasets.
 -   **Organized Output:** Saves generated datasets in structured formats, ready for fine-tuning models or other NLP pipelines.

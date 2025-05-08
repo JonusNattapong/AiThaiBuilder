@@ -4,6 +4,10 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 from dotenv import load_dotenv
+import requests
+import time
+import sys
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -587,14 +591,132 @@ DIALECT_CATEGORIES = {
     }
 }
 
+def get_deepseek_api_key():
+    """Get Deepseek API key from environment or prompt user"""
+    api_key = os.environ.get('DEEPSEEK_API_KEY')
+    if not api_key:
+        api_key = input("Please enter your Deepseek API key: ")
+    return api_key
+
+def generate_text_with_deepseek(prompt, api_key, retries=3, delay=5):
+    """Generate text using Deepseek API"""
+    url = "https://api.deepseek.com/v1/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    data = {
+        "model": "deepseek-chat",
+        "messages": [
+            {"role": "system", "content": "You are a helpful AI that generates text in Thai dialects."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 300
+    }
+    
+    for attempt in range(retries):
+        try:
+            response = requests.post(url, headers=headers, json=data)
+            response.raise_for_status()
+            result = response.json()
+            return result["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            if attempt < retries - 1:
+                print(f"Error: {e}. Retrying in {delay} seconds...")
+                time.sleep(delay)
+            else:
+                print(f"Failed after {retries} attempts: {e}")
+                return None
+
+def generate_dialect_samples(dialect_name, dialect_info, num_samples, api_key):
+    """Generate samples for a specific dialect"""
+    system_prompt = dialect_info['system_prompt']
+    examples = dialect_info['examples']
+    examples_text = "\n".join([f"- {example}" for example in examples])
+    
+    full_prompt = f"""
+{system_prompt}
+
+ตัวอย่างประโยค:
+{examples_text}
+
+โปรดสร้างประโยคภาษา{dialect_name} จำนวน 1 ประโยค ที่แตกต่างจากตัวอย่าง
+แต่ยังคงความเป็นธรรมชาติและสะท้อนวัฒนธรรมของภาษาถิ่นนี้
+"""
+    
+    return generate_text_with_deepseek(full_prompt, api_key)
+
+def process_sample(args):
+    """Process a single sample for threading"""
+    dialect_name, dialect_info, api_key = args
+    sample = generate_dialect_samples(dialect_name, dialect_info, 1, api_key)
+    return {
+        "dialect": dialect_name,
+        "text": sample,
+        "source": "deepseek-ai",
+        "timestamp": datetime.now().isoformat()
+    }
+
 def main():
     parser = argparse.ArgumentParser(description='Generate Thai dialect dataset')
     parser.add_argument('--samples', type=int, default=100,
                       help='Number of samples per dialect')
+    parser.add_argument('--output_file', type=str, default='thai_dialect_dataset.json',
+                      help='Output file path')
+    parser.add_argument('--max_workers', type=int, default=8,
+                      help='Maximum number of concurrent workers')
     args = parser.parse_args()
 
-    # Implementation will continue here
     print(f"Generating {args.samples} samples per dialect...")
+    
+    # Get API key
+    api_key = get_deepseek_api_key()
+    if not api_key:
+        print("Error: No API key provided. Exiting.")
+        return
+    
+    # Prepare output directory
+    output_dir = os.path.dirname(args.output_file)
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    # Generate samples for each dialect
+    all_samples = []
+    
+    tasks = []
+    for dialect_name, dialect_info in DIALECT_CATEGORIES.items():
+        for _ in range(args.samples):
+            tasks.append((dialect_name, dialect_info, api_key))
+    
+    # Use ThreadPoolExecutor for parallel generation
+    with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
+        results = list(tqdm(
+            executor.map(process_sample, tasks),
+            total=len(tasks),
+            desc="Generating dialect samples"
+        ))
+        all_samples.extend([r for r in results if r is not None])
+    
+    # Save results
+    with open(args.output_file, 'w', encoding='utf-8') as f:
+        json.dump(all_samples, f, ensure_ascii=False, indent=2)
+    
+    # Generate summary
+    dialects_count = {}
+    for sample in all_samples:
+        dialect = sample['dialect']
+        if dialect in dialects_count:
+            dialects_count[dialect] += 1
+        else:
+            dialects_count[dialect] = 1
+    
+    print("\nGeneration complete!")
+    print(f"Total samples generated: {len(all_samples)}")
+    print(f"Dataset saved to: {args.output_file}")
+    print("\nDialect distribution:")
+    for dialect, count in dialects_count.items():
+        print(f"- {dialect}: {count} samples")
 
 if __name__ == "__main__":
     main()
