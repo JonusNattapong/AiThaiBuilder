@@ -5,6 +5,7 @@ import time
 import csv
 import argparse
 import requests
+import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -255,20 +256,38 @@ def main():
     for category_emotion, samples in results.items():
         if samples:
             category = category_emotion.split('_')[0]
-            output_file = os.path.join(OUTPUT_DIR, f"thai_sentiment_{category}_{timestamp}.json")
-            with open(output_file, "w", encoding="utf-8") as f:
+            # Save as JSON
+            json_file = os.path.join(OUTPUT_DIR, f"thai_sentiment_{category}_{timestamp}.json")
+            with open(json_file, "w", encoding="utf-8") as f:
                 json.dump(samples, f, ensure_ascii=False, indent=2)
-            print(f"Saved {len(samples)} samples to {output_file}")
+            
+            # Save as Parquet
+            df = pd.DataFrame(samples)
+            parquet_file = os.path.join(OUTPUT_DIR, f"thai_sentiment_{category}_{timestamp}.parquet")
+            df.to_parquet(parquet_file, engine='pyarrow', index=False)
+            
+            print(f"Saved {len(samples)} samples to:")
+            print(f"- JSON: {json_file}")
+            print(f"- Parquet: {parquet_file}")
     
     # Save combined results
     all_samples = [item for sublist in results.values() for item in sublist]
-    output_file = os.path.join(OUTPUT_DIR, f"thai_sentiment_dataset_{len(all_samples)}_{timestamp}.json")
-    with open(output_file, "w", encoding="utf-8") as f:
+    
+    # Save combined JSON
+    json_output = os.path.join(OUTPUT_DIR, f"thai_sentiment_dataset_{len(all_samples)}_{timestamp}.json")
+    with open(json_output, "w", encoding="utf-8") as f:
         json.dump(all_samples, f, ensure_ascii=False, indent=2)
+    
+    # Save combined Parquet
+    df_all = pd.DataFrame(all_samples)
+    parquet_output = os.path.join(OUTPUT_DIR, f"thai_sentiment_dataset_{len(all_samples)}_{timestamp}.parquet")
+    df_all.to_parquet(parquet_output, engine='pyarrow', index=False)
     
     print(f"\nGeneration complete!")
     print(f"Total samples generated: {len(all_samples)}")
-    print(f"Combined dataset saved to: {output_file}")
+    print(f"Combined dataset saved to:")
+    print(f"- JSON: {json_output}")
+    print(f"- Parquet: {parquet_output}")
 
 if __name__ == "__main__":
     main()

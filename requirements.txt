@@ -1,7 +1,6 @@
-gradio
 requests
 python-dotenv
-datasets 
+datasets
 huggingface_hub
 pandas
 torch
@@ -9,6 +8,8 @@ transformers
 scikit-learn
 reportlab
 matplotlib
+pyarrow
+tqdm
 # For PEFT (e.g., LoRA)
 peft
 # For experiment tracking (optional, choose one or more)
