@@ -1,19 +1,19 @@
 <p align="center">
-  <img src="assets/banner.png" alt="RunThaiGenDataset Banner" hight="150" width="150"/>
+  <img src="assets/banner.png" alt="ThaiGenDataset Banner" hight="150" width="150"/>
 </p>
 
-<h1 align="center">RunThaiGenDataset</h1>
+<h1 align="center">ThaiGenDataset</h1>
 <p align="center">🤖 เครื่องมือสร้างชุดข้อมูลภาษาไทยคุณภาพสูง 🤖</p>
 
 <p align="center">
-  <a href="https://github.com/JonusNattapong/RunThaiGenDataset/blob/main/LICENSE"><img src="https://img.shields.io/github/license/JonusNattapong/RunThaiGenDataset?color=blue" alt="License"></a>
-  <a href="https://github.com/JonusNattapong/RunThaiGenDataset/stargazers"><img src="https://img.shields.io/github/stars/JonusNattapong/RunThaiGenDataset?color=yellow" alt="Stars"></a>
-  <a href="https://github.com/JonusNattapong/RunThaiGenDataset/network/members"><img src="https://img.shields.io/github/forks/JonusNattapong/RunThaiGenDataset?color=green" alt="Forks"></a>
-  <a href="https://github.com/JonusNattapong/RunThaiGenDataset/issues"><img src="https://img.shields.io/github/issues/JonusNattapong/RunThaiGenDataset?color=red" alt="Issues"></a>
+  <a href="https://github.com/JonusNattapong/ThaiGenDataset/blob/main/LICENSE"><img src="https://img.shields.io/github/license/JonusNattapong/ThaiGenDataset?color=blue" alt="License"></a>
+  <a href="https://github.com/JonusNattapong/ThaiGenDataset/stargazers"><img src="https://img.shields.io/github/stars/JonusNattapong/ThaiGenDataset?color=yellow" alt="Stars"></a>
+  <a href="https://github.com/JonusNattapong/ThaiGenDataset/network/members"><img src="https://img.shields.io/github/forks/JonusNattapong/ThaiGenDataset?color=green" alt="Forks"></a>
+  <a href="https://github.com/JonusNattapong/ThaiGenDataset/issues"><img src="https://img.shields.io/github/issues/JonusNattapong/ThaiGenDataset?color=red" alt="Issues"></a>
 </p>
 
 <p align="center">
-  <b>RunThaiGenDataset</b> คือเครื่องมือออกแบบมาสำหรับสร้างชุดข้อมูลภาษาไทยสำหรับ NLP ที่มีความหลากหลาย
+  <b>ThaiGenDataset</b> คือเครื่องมือออกแบบมาสำหรับสร้างชุดข้อมูลภาษาไทยสำหรับ NLP ที่มีความหลากหลาย
   ด้วยการใช้ Deepseek API
 </p>
 
@@ -93,13 +93,13 @@
 
 ## 🛠️ การติดตั้ง
 
-ทำตามขั้นตอนเหล่านี้เพื่อติดตั้ง RunThaiGenDataset บนเครื่องของคุณ:
+ทำตามขั้นตอนเหล่านี้เพื่อติดตั้ง ThaiGenDataset บนเครื่องของคุณ:
 
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/JonusNattapong/RunThaiGenDataset.git
-cd RunThaiGenDataset
+git clone https://github.com/JonusNattapong/ThaiGenDataset.git
+cd ThaiGenDataset
 ```
 
 ### 2. ติดตั้ง Dependencies
@@ -130,7 +130,7 @@ pip install https://github.com/explosion/spacy-models/releases/download/th_core_
 ### 3. ตั้งค่า Deepseek API Key
 
 1. รับ API key จาก [https://platform.deepseek.com/](https://platform.deepseek.com/)
-2. สร้างไฟล์ `.env` ในไดเรกทอรีหลักของโปรเจค (`RunThaiGenDataset/.env`) และเพิ่ม API key ของคุณ:
+2. สร้างไฟล์ `.env` ในไดเรกทอรีหลักของโปรเจค (`ThaiGenDataset/.env`) และเพิ่ม API key ของคุณ:
 
 ```env
 # .env
@@ -139,7 +139,7 @@ DEEPSEEK_API_KEY="your_actual_deepseek_api_key_here"
 
 ## 🚀 วิธีการใช้งาน
 
-RunThaiGenDataset มีเครื่องมือหลายตัวสำหรับการสร้างและจัดการข้อมูลภาษาไทย ต่อไปนี้เป็นตัวอย่างพื้นฐานในการใช้งาน:
+ThaiGenDataset มีเครื่องมือหลายตัวสำหรับการสร้างและจัดการข้อมูลภาษาไทย ต่อไปนี้เป็นตัวอย่างพื้นฐานในการใช้งาน:
 
 ### 1. การสร้างชุดข้อมูลพื้นฐาน
 
@@ -210,7 +210,7 @@ python src/script/genarate/specialized/translate_dataset_inplace.py --input data
 
 ## 📊 การวิเคราะห์ข้อมูล
 
-RunThaiGenDataset มีเครื่องมือวิเคราะห์ข้อมูลเพื่อตรวจสอบคุณภาพและลักษณะของชุดข้อมูลของคุณ:
+ThaiGenDataset มีเครื่องมือวิเคราะห์ข้อมูลเพื่อตรวจสอบคุณภาพและลักษณะของชุดข้อมูลของคุณ:
 
 ### 1. วิเคราะห์ข้อมูลเบื้องต้น
 
@@ -283,7 +283,7 @@ python src/script/check/check_ner_consistency.py --input_file processed/ner_data
 
 ## 🔮 แนวทางการพัฒนาในอนาคต
 
-RunThaiGenDataset มีแผนการพัฒนาอย่างต่อเนื่องเพื่อเพิ่มความสามารถและประสิทธิภาพ ดังนี้:
+ThaiGenDataset มีแผนการพัฒนาอย่างต่อเนื่องเพื่อเพิ่มความสามารถและประสิทธิภาพ ดังนี้:
 
 ### 1. การ Fine-tune โมเดลขั้นสูง
 
@@ -350,7 +350,7 @@ RunThaiGenDataset มีแผนการพัฒนาอย่างต่�
    npm install -g redoc-cli
 
    # นำทางไปยังไดเรกทอรีโปรเจคของคุณ
-   # cd path/to/RunThaiGenDataset
+   # cd path/to/ThaiGenDataset
 
    # ให้บริการเอกสาร
    redoc-cli serve openapi.yaml
