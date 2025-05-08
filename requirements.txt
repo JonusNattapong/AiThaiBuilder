@@ -9,3 +9,15 @@ transformers
 scikit-learn
 reportlab
 matplotlib
+# For PEFT (e.g., LoRA)
+peft
+# For experiment tracking (optional, choose one or more)
+# wandb 
+# mlflow
+# tensorboard (usually comes with TensorFlow or PyTorch, but can be listed)
+# For hyperparameter optimization (optional)
+# optuna
+# ray[tune]
+accelerate # Often required for advanced training features and PEFT
+bitsandbytes # For 8-bit/4-bit quantization (e.g. QLoRA)
+scipy # Sometimes a dependency for PEFT or other advanced features

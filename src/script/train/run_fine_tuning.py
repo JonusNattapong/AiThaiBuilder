@@ -63,11 +63,18 @@ def main():
     parser.add_argument("--early_stopping_patience", type=int, default=3, help="จำนวน epochs ที่ต้องรอก่อนหยุด")
     parser.add_argument("--fp16", action="store_true", help="ใช้ mixed precision training")
     
+    # PEFT parameters
+    parser.add_argument("--use_peft", action="store_true", help="ใช้ Parameter-Efficient Fine-Tuning (PEFT)")
+    parser.add_argument("--peft_config_file", type=str, help="ไฟล์ JSON สำหรับ PEFT configuration")
+
     # HF Hub parameters
     parser.add_argument("--push_to_hub", action="store_true", help="อัพโหลดโมเดลขึ้น Hugging Face Hub")
     parser.add_argument("--hub_model_id", type=str, help="ชื่อโมเดลบน Hub (username/model-name)")
     parser.add_argument("--hub_token", type=str, help="Hugging Face token")
     
+    # Experiment tracking
+    parser.add_argument("--report_to", nargs="+", default=["tensorboard"], help="บริการสำหรับติดตามการทดลอง (เช่น wandb, tensorboard)")
+
     args = parser.parse_args()
     
     # ถ้าใช้ --list_models หรือ --list_tasks
@@ -108,16 +115,32 @@ def main():
     print(f"Maximum Length: {args.max_length}")
     print(f"Using Early Stopping: {args.early_stopping}")
     print(f"Using Mixed Precision: {args.fp16}")
+    print(f"Using PEFT: {args.use_peft}")
+    if args.use_peft and args.peft_config_file:
+        print(f"PEFT Config File: {args.peft_config_file}")
+    print(f"Report to: {', '.join(args.report_to)}")
     print("=" * 50 + "\n")
     
     # สร้าง fine-tuner
+    peft_config_dict = None
+    if args.use_peft and args.peft_config_file:
+        try:
+            with open(args.peft_config_file, 'r') as f:
+                peft_config_dict = json.load(f)
+        except Exception as e:
+            print(f"Error loading PEFT config from {args.peft_config_file}: {e}")
+            # Decide if to proceed without PEFT or exit
+            # For now, let ModelFineTuner handle the None peft_config
+
     fine_tuner = ModelFineTuner(
         model_name=args.model if not args.custom_model else None,
         model_size=args.model_size,
         task_type=args.task,
         num_labels=args.num_labels,
         max_length=args.max_length,
-        custom_model_path=args.custom_model
+        custom_model_path=args.custom_model,
+        use_peft=args.use_peft,
+        peft_config=peft_config_dict
     )
     
     # เตรียมข้อมูล
@@ -161,7 +184,10 @@ def main():
         fp16=args.fp16,
         push_to_hub=args.push_to_hub,
         hub_model_id=args.hub_model_id,
-        hub_token=args.hub_token
+        hub_token=args.hub_token,
+        report_to=args.report_to,
+        # Pass other relevant args from run_fine_tuning to ModelFineTuner.train kwargs if needed
+        # e.g., logging_steps=args.logging_steps if you add such an arg
     )
     
     # แสดงผลลัพธ์

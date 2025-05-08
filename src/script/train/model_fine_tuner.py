@@ -24,6 +24,9 @@ from datasets import Dataset, DatasetDict, load_dataset
 from sklearn.model_selection import train_test_split
 import evaluate
 
+# Import for PEFT if added
+# from peft import LoraConfig, get_peft_model, TaskType # Example for LoRA
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -145,6 +148,8 @@ class ModelFineTuner:
         num_labels: Optional[int] = None,
         max_length: int = 512,
         custom_model_path: Optional[str] = None,
+        use_peft: bool = False, # Add PEFT option
+        peft_config: Optional[Dict[str, Any]] = None, # PEFT configuration
         **kwargs
     ):
         """
@@ -157,6 +162,8 @@ class ModelFineTuner:
             num_labels (int, optional): จำนวน labels สำหรับงาน classification
             max_length (int): ความยาวสูงสุดของข้อความ
             custom_model_path (str, optional): เส้นทางของโมเดลที่ไม่ได้อยู่ในรายการที่รองรับ
+            use_peft (bool): ใช้ Parameter-Efficient Fine-Tuning (PEFT) หรือไม่
+            peft_config (dict, optional): การตั้งค่า PEFT
         """
         self.model_name = model_name
         self.model_size = model_size
@@ -164,6 +171,8 @@ class ModelFineTuner:
         self.num_labels = num_labels
         self.max_length = max_length
         self.custom_model_path = custom_model_path
+        self.use_peft = use_peft
+        self.peft_config = peft_config
         self.kwargs = kwargs
         
         # ตั้งค่า device สำหรับการเทรน
@@ -224,28 +233,54 @@ class ModelFineTuner:
         model_args = self.task_config["model_args"].copy()
         
         try:
+            base_model = None
             if model_type == "sequence_classification":
                 if self.num_labels is None:
                     raise ValueError("For classification tasks, num_labels must be specified")
                 model_args["num_labels"] = self.num_labels
-                model = AutoModelForSequenceClassification.from_pretrained(
+                base_model = AutoModelForSequenceClassification.from_pretrained(
                     self.model_path, **model_args
                 )
             elif model_type == "seq2seq_lm":
-                model = AutoModelForSeq2SeqLM.from_pretrained(self.model_path)
+                base_model = AutoModelForSeq2SeqLM.from_pretrained(self.model_path)
             elif model_type == "masked_lm":
-                model = AutoModelForMaskedLM.from_pretrained(self.model_path)
+                base_model = AutoModelForMaskedLM.from_pretrained(self.model_path)
             elif model_type == "causal_lm":
-                model = AutoModelForCausalLM.from_pretrained(self.model_path)
+                base_model = AutoModelForCausalLM.from_pretrained(self.model_path)
             else:
                 raise ValueError(f"Unsupported model type: {model_type}")
             
             # Set model parameters
-            if "pad_token" not in self.tokenizer.special_tokens_map and model.config.pad_token_id is None:
-                if hasattr(model.config, "eos_token_id") and model.config.eos_token_id is not None:
-                    model.config.pad_token_id = model.config.eos_token_id
+            if "pad_token" not in self.tokenizer.special_tokens_map and base_model.config.pad_token_id is None:
+                if hasattr(base_model.config, "eos_token_id") and base_model.config.eos_token_id is not None:
+                    base_model.config.pad_token_id = base_model.config.eos_token_id
             
-            return model
+            # Apply PEFT if enabled
+            if self.use_peft and self.peft_config:
+                # Example for LoRA, adapt as needed for other PEFT methods
+                # if self.peft_config.get("peft_type", "").lower() == "lora":
+                #     peft_task_type = None
+                #     if self.task_type in ["classification", "multi_label", "regression"]:
+                #         peft_task_type = TaskType.SEQ_CLS
+                #     elif self.task_type in ["summarization", "translation"]:
+                #         peft_task_type = TaskType.SEQ_2_SEQ_LM
+                #     elif self.task_type == "language_modeling" and model_type == "causal_lm":
+                #         peft_task_type = TaskType.CAUSAL_LM
+                #     # Add more task type mappings as needed
+
+                #     if peft_task_type:
+                #         lora_config_params = self.peft_config.get("lora_config", {})
+                #         config = LoraConfig(task_type=peft_task_type, **lora_config_params)
+                #         base_model = get_peft_model(base_model, config)
+                #         logger.info(f"Applied LoRA PEFT to the model.")
+                #         base_model.print_trainable_parameters()
+                #     else:
+                #         logger.warning(f"PEFT task type not determined for task {self.task_type}. PEFT not applied.")
+                # else:
+                #    logger.warning(f"Unsupported PEFT type: {self.peft_config.get('peft_type')}. PEFT not applied.")
+                logger.info("PEFT application logic would be here.") # Placeholder for PEFT logic
+
+            return base_model
         except Exception as e:
             logger.error(f"Failed to create model: {str(e)}")
             raise
@@ -419,7 +454,7 @@ class ModelFineTuner:
                 df = pd.read_csv(data)
             elif data.endswith('.tsv'):
                 df = pd.read_csv(data, sep='\t')
-            elif data.endswith('.json') or data.endswith('.jsonl'):
+            elif data.endswith('.json')หรือ data.endswith('.jsonl'):
                 df = pd.read_json(data, lines=data.endswith('.jsonl'))
             else:
                 try:
@@ -522,6 +557,7 @@ class ModelFineTuner:
         use_early_stopping: bool = True,
         early_stopping_patience: int = 3,
         fp16: bool = False,
+        report_to: Optional[List[str]] = None, # For experiment tracking (e.g., ["wandb", "tensorboard"])
         **kwargs
     ):
         """
@@ -541,6 +577,7 @@ class ModelFineTuner:
             use_early_stopping: ใช้ early stopping หรือไม่
             early_stopping_patience: จำนวน epochs ที่ต้องรอก่อนหยุดเทรน
             fp16: ใช้ mixed precision training หรือไม่
+            report_to: บริการติดตามการทดลอง (เช่น ["wandb", "tensorboard"])
             **kwargs: พารามิเตอร์เพิ่มเติม
             
         Returns:
@@ -568,20 +605,22 @@ class ModelFineTuner:
             evaluation_strategy=evaluation_strategy,
             save_strategy=save_strategy,
             load_best_model_at_end=load_best_model_at_end,
-            save_total_limit=2,  # เก็บโมเดลไว้แค่ 2 เวอร์ชันล่าสุด
+            save_total_limit=kwargs.get("save_total_limit", 2),
             metric_for_best_model=kwargs.get("metric_for_best_model", "loss"),
             greater_is_better=kwargs.get("greater_is_better", False),
             logging_dir=os.path.join(output_dir, "logs"),
             logging_strategy="steps",
-            logging_steps=100,
+            logging_steps=kwargs.get("logging_steps", 100),
             fp16=fp16 and torch.cuda.is_available(),
-            report_to=["tensorboard"],
+            report_to=report_to if report_to else ["tensorboard"], # Use provided report_to or default
             dataloader_num_workers=kwargs.get("num_workers", 2),
             gradient_accumulation_steps=kwargs.get("gradient_accumulation_steps", 1),
             disable_tqdm=False,
             push_to_hub=kwargs.get("push_to_hub", False),
             hub_model_id=kwargs.get("hub_model_id", None),
-            hub_token=kwargs.get("hub_token", None)
+            hub_token=kwargs.get("hub_token", None),
+            # Add deepspeed config if needed
+            # deepspeed=kwargs.get("deepspeed_config_path", None)
         )
         
         # ตั้งค่า data collator
@@ -647,7 +686,13 @@ class ModelFineTuner:
         train_result = trainer.train()
         
         # บันทึกโมเดลสุดท้าย
-        trainer.save_model(output_dir)
+        # If using PEFT, need to handle saving adapter weights correctly
+        # For example, if model is a PeftModel:
+        # if self.use_peft:
+        #     trainer.model.save_pretrained(output_dir)
+        # else:
+        #     trainer.save_model(output_dir)
+        trainer.save_model(output_dir) # Original saving, adjust if PEFT is used.
         self.tokenizer.save_pretrained(output_dir)
         
         # บันทึกผลลัพธ์การเทรน
@@ -706,8 +751,23 @@ def main():
     parser.add_argument("--num_epochs", type=int, default=3, help="Number of training epochs")
     parser.add_argument("--max_length", type=int, default=512, help="Maximum sequence length")
     parser.add_argument("--custom_model", type=str, default=None, help="Path to custom model")
+    parser.add_argument("--use_peft", action="store_true", help="Use Parameter-Efficient Fine-Tuning (PEFT)")
+    parser.add_argument("--peft_config_file", type=str, default=None, help="Path to PEFT configuration JSON file")
+    parser.add_argument("--report_to", nargs="+", default=["tensorboard"], help="Experiment tracking services (e.g., wandb tensorboard)")
     
     args = parser.parse_args()
+
+    peft_config_dict = None
+    if args.use_peft and args.peft_config_file:
+        try:
+            with open(args.peft_config_file, 'r') as f:
+                peft_config_dict = json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load PEFT config from {args.peft_config_file}: {e}")
+            return
+    elif args.use_peft and not args.peft_config_file:
+        logger.warning("`--use_peft` is set but `--peft_config_file` is not provided. PEFT will not be applied unless a default config is handled internally.")
+        # Or set a default PEFT config here if desired
     
     # สร้าง fine-tuner
     fine_tuner = ModelFineTuner(
@@ -716,7 +776,9 @@ def main():
         task_type=args.task,
         num_labels=args.num_labels,
         max_length=args.max_length,
-        custom_model_path=args.custom_model
+        custom_model_path=args.custom_model,
+        use_peft=args.use_peft,
+        peft_config=peft_config_dict
     )
     
     # เตรียมข้อมูล
@@ -732,7 +794,8 @@ def main():
         output_dir=args.output_dir,
         batch_size=args.batch_size,
         learning_rate=args.learning_rate,
-        num_epochs=args.num_epochs
+        num_epochs=args.num_epochs,
+        report_to=args.report_to
     )
     
     logger.info(f"Training completed. Model saved to {args.output_dir}")
