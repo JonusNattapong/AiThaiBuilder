@@ -159,4 +159,4 @@ DEEPSEEK_API_KEY="your_actual_deepseek_api_key_here"
 
 ---
 
-<p align="center">Made with ❤️ for the Thai NLP community</p>
+<p align="center">Made with ❤️ for the Thai AI Community</p>
